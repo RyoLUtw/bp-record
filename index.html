@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BP Tracker</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#111824;
+      --card2:#0f1621;
+      --text:#e9eef6;
+      --muted:#a8b3c7;
+      --line:rgba(255,255,255,.08);
+      --accent:#8ab4ff;
+      --good:rgba(80, 200, 120, .16);
+      --s1:rgba(255, 196, 61, .18);
+      --s2:rgba(255, 120, 80, .18);
+      --s3:rgba(255, 70, 70, .18);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius2: 14px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(138,180,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 110% 10%, rgba(255,120,80,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    .wrap{max-width:980px; margin:0 auto; padding:18px 16px 40px;}
+
+    header{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:12px; margin:10px 0 16px;
+    }
+    header h1{font-size:18px; margin:0; letter-spacing:.2px;}
+    header .sub{font-size:12px; color:var(--muted); margin:0;}
+
+    .topbar{
+      position:sticky; top:0; z-index:5;
+      padding:10px 0 14px;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,15,20,.90), rgba(11,15,20,.55));
+    }
+
+    /* Slide switch tabs */
+    .tabs{
+      width:100%;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      padding:4px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:4px;
+      box-shadow: var(--shadow);
+    }
+    .tabbtn{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+    .tabbtn.active{
+      background: rgba(138,180,255,.22);
+      color: var(--text);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+      align-items:start;
+      margin-top:14px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .card .hd h2{font-size:14px; margin:0;}
+    .card .hd .hint{font-size:12px; color:var(--muted); margin:2px 0 0;}
+    .card .bd{padding:14px;}
+
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .row + .row{margin-top:12px}
+
+    label{font-size:12px; color:var(--muted)}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      font-size:12px;
+      color:var(--text);
+    }
+
+    .field{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      padding:10px;
+      flex:1;
+      min-width: 240px;
+    }
+
+    .field .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+    }
+
+    .valbox{
+      display:flex; align-items:center; gap:8px;
+    }
+
+    input[type=number]{
+      width:84px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:10px;
+      padding:6px 8px;
+      font-weight:700;
+      outline:none;
+    }
+
+    input[type=range]{width: 100%}
+
+    .triple{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 560px){
+      .triple{grid-template-columns:1fr}
+      input[type=number]{width:100%}
+      .field{min-width: 0}
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(138,180,255,.14);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn.secondary{background: rgba(255,255,255,.06)}
+    .btn.danger{background: rgba(255,70,70,.14)}
+    .btn:disabled{opacity:.45; cursor:not-allowed}
+
+    .toggle{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      min-width: 260px;
+    }
+    .switch{
+      width:44px; height:24px; border-radius:999px;
+      background: rgba(255,255,255,.12);
+      border:1px solid var(--line);
+      position:relative;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+    .switch::after{
+      content:"";
+      width:18px; height:18px; border-radius:999px;
+      position:absolute; top:50%; left:3px;
+      transform:translateY(-50%);
+      background: rgba(255,255,255,.75);
+      transition: all .18s ease;
+    }
+    .switch.on{background: rgba(80, 200, 120, .22)}
+    .switch.on::after{left:22px; background: rgba(255,255,255,.92)}
+
+    .timer{
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding:12px;
+      background: rgba(0,0,0,.12);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .timer strong{font-size:16px}
+    .timer .mini{font-size:12px; color:var(--muted)}
+
+    .chartWrap{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      padding:10px;
+      overflow:hidden;
+    }
+    canvas{width:100%; height:280px; display:block}
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:12px}
+    .swatch{display:inline-flex; align-items:center; gap:6px}
+    .sq{width:10px; height:10px; border-radius:3px; background:rgba(255,255,255,.25); border:1px solid rgba(255,255,255,.25)}
+
+    .list{
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .item{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      border-radius: var(--radius2);
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .item .a{display:flex; flex-direction:column; gap:4px}
+    .item .b{text-align:right; color:var(--muted); font-size:12px}
+    .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
+
+    .sep{height:1px; background: var(--line); margin:12px 0}
+
+    .notice{
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.35;
+    }
+    .notice code{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px;}
+
+    .controls{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+
+    select, input[type=date]{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      color: var(--text);
+      border-radius: 12px;
+      padding:10px 10px;
+      font-weight:600;
+      outline:none;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      color:var(--muted);
+      gap:6px;
+    }
+
+    .rightStrip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .footerRow{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:12px;
+    }
+
+    .smallBtn{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius: 12px;
+    }
+
+    .hidden{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <header>
+        <div>
+          <h1>BP Tracker</h1>
+          <p class="sub">Two readings ➜ auto-average ➜ review by day / 7 days / 4 weeks</p>
+        </div>
+        <div class="pill mono" id="todayPill"></div>
+      </header>
+
+      <div class="tabs" role="tablist" aria-label="Tabs">
+        <button class="tabbtn active" id="tabInput" role="tab" aria-selected="true">Input</button>
+        <button class="tabbtn" id="tabReview" role="tab" aria-selected="false">Review</button>
+      </div>
+    </div>
+
+    <!-- INPUT VIEW -->
+    <section id="viewInput">
+      <div class="grid">
+
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>Measurement input</h2>
+              <div class="hint">Defaults to last 7-day averages (or 120/80 HR 80)</div>
+            </div>
+            <div class="badge" id="defaultBadge"></div>
+          </div>
+          <div class="bd">
+
+            <div class="row controls">
+              <div class="rightStrip">
+                <label for="inputDate">Date</label>
+                <input type="date" id="inputDate" />
+              </div>
+
+              <div class="rightStrip">
+                <label for="timeSlot">Time</label>
+                <select id="timeSlot">
+                  <option value="auto">Auto</option>
+                  <option value="morning">Morning</option>
+                  <option value="evening">Evening</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <select id="timeCustom" class="hidden">
+                  <option value="midday">Midday</option>
+                  <option value="night">Night</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="toggle" title="This is stored per day">
+                <div class="switch" id="medSwitch" role="switch" aria-checked="false" tabindex="0"></div>
+                <div>
+                  <div style="font-weight:800">Medication taken today</div>
+                  <div class="notice">Stored per date. It will show in the review list.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="row">
+              <div class="field" style="flex:1">
+                <div class="top">
+                  <div>
+                    <div style="font-weight:800">Reading #1</div>
+                    <div class="hint">Enter systolic / diastolic / heart rate</div>
+                  </div>
+                  <div class="badge mono" id="cat1">—</div>
+                </div>
+
+                <div class="triple">
+                  <div>
+                    <label>Systolic (SP)</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
+                    <input type="range" id="sp1r" min="100" max="200" step="1" />
+                  </div>
+
+                  <div>
+                    <label>Diastolic (DP)</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
+                    <input type="range" id="dp1r" min="60" max="160" step="1" />
+                  </div>
+
+                  <div>
+                    <label>Heart rate</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                    </div>
+                    <input type="range" id="hr1r" min="60" max="130" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="timer" style="flex:1">
+                <div>
+                  <div style="font-weight:800">1-minute rest timer</div>
+                  <div class="mini">Use between Reading #1 and Reading #2</div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <div class="mono"><strong id="timer">01:00</strong></div>
+                  <button class="btn secondary" id="btnTimer">Start</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="field" style="flex:1">
+                <div class="top">
+                  <div>
+                    <div style="font-weight:800">Reading #2</div>
+                    <div class="hint">Timer optional, but recommended</div>
+                  </div>
+                  <div class="badge mono" id="cat2">—</div>
+                </div>
+
+                <div class="triple">
+                  <div>
+                    <label>Systolic (SP)</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
+                    <input type="range" id="sp2r" min="100" max="200" step="1" />
+                  </div>
+
+                  <div>
+                    <label>Diastolic (DP)</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
+                    <input type="range" id="dp2r" min="60" max="160" step="1" />
+                  </div>
+
+                  <div>
+                    <label>Heart rate</label>
+                    <div class="valbox">
+                      <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
+                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                    </div>
+                    <input type="range" id="hr2r" min="60" max="130" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="justify-content:space-between">
+              <div class="notice" style="max-width:520px">
+                Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap">
+                <button class="btn secondary" id="btnQuickFill">Reset to defaults</button>
+                <button class="btn" id="btnSave">Save averaged record</button>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="row" style="justify-content:space-between">
+              <div class="notice">
+                Data is stored locally in your browser via <code>localStorage</code>.
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap">
+                <button class="btn secondary smallBtn" id="btnExport">Export JSON</button>
+                <button class="btn secondary smallBtn" id="btnImport">Import JSON</button>
+                <button class="btn danger smallBtn" id="btnWipe">Wipe all data</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>Recent records</h2>
+              <div class="hint">Latest 10 averaged entries</div>
+            </div>
+            <div class="badge mono" id="countBadge"></div>
+          </div>
+          <div class="bd">
+            <div class="list" id="recentList"></div>
+            <div class="sep"></div>
+            <div class="notice" id="recentTip"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- REVIEW VIEW -->
+    <section id="viewReview" class="hidden">
+      <div class="grid">
+
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>Review</h2>
+              <div class="hint">1 day (dual-axis) • 7 days • 4 weeks</div>
+            </div>
+            <div class="badge mono" id="reviewRangeBadge"></div>
+          </div>
+          <div class="bd">
+
+            <div class="row controls">
+              <label for="reviewMode">Mode</label>
+              <select id="reviewMode">
+                <option value="1d">1 day</option>
+                <option value="7d">7 days</option>
+                <option value="4w">4 weeks</option>
+              </select>
+
+              <label for="reviewEndDate">End date</label>
+              <input type="date" id="reviewEndDate" />
+
+              <button class="btn secondary" id="btnRefresh">Refresh</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="chartWrap">
+              <canvas id="chart" width="900" height="360"></canvas>
+              <div class="legend" id="legend"></div>
+            </div>
+
+            <div class="footerRow">
+              <div class="notice" id="reviewNote"></div>
+              <div class="pill mono" id="statsPill"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>Records in range</h2>
+              <div class="hint">Grouped by date; medication flag shown per day</div>
+            </div>
+          </div>
+          <div class="bd">
+            <div class="list" id="rangeList"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+<script>
+(() => {
+  // ---------- Utilities ----------
+  const $ = (id) => document.getElementById(id);
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const fmtDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  const parseDate = (s) => {
+    const [y,m,dd] = s.split('-').map(Number);
+    return new Date(y, m-1, dd);
+  };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Categories (4 bands requested: normal, stage1, stage2, stage3)
+  // We'll treat 120-129 systolic as "Normal" band for display simplicity.
+  function bpCategory(sp, dp){
+    const s = Number(sp), d = Number(dp);
+    // Stage 3 (crisis)
+    if (s >= 180 || d >= 120) return {key:'s3', label:'Stage 3', desc:'≥180 or ≥120'};
+    // Stage 2
+    if (s >= 140 || d >= 90)  return {key:'s2', label:'Stage 2', desc:'140–179 or 90–119'};
+    // Stage 1
+    if ((s >= 130 && s <= 139) || (d >= 80 && d <= 89)) return {key:'s1', label:'Stage 1', desc:'130–139 or 80–89'};
+    // Normal
+    return {key:'n', label:'Normal', desc:'<130 and <80'};
+  }
+
+  function catColor(key){
+    const styles = getComputedStyle(document.documentElement);
+    if (key==='s1') return styles.getPropertyValue('--s1').trim();
+    if (key==='s2') return styles.getPropertyValue('--s2').trim();
+    if (key==='s3') return styles.getPropertyValue('--s3').trim();
+    return styles.getPropertyValue('--good').trim();
+  }
+
+  function catText(key){
+    if (key==='s1') return 'Stage 1';
+    if (key==='s2') return 'Stage 2';
+    if (key==='s3') return 'Stage 3';
+    return 'Normal';
+  }
+
+  function prettySlot(slot){
+    if (slot==='morning') return 'Morning';
+    if (slot==='evening') return 'Evening';
+    if (slot==='midday') return 'Midday';
+    if (slot==='night') return 'Night';
+    if (slot==='other') return 'Other';
+    return 'Auto';
+  }
+
+  // ---------- Storage ----------
+  const KEY_REC = 'bp_records_v1';
+  const KEY_MEDS = 'bp_meds_v1';
+
+  function loadRecords(){
+    try { return JSON.parse(localStorage.getItem(KEY_REC) || '[]'); }
+    catch { return []; }
+  }
+  function saveRecords(list){
+    localStorage.setItem(KEY_REC, JSON.stringify(list));
+  }
+  function loadMeds(){
+    try { return JSON.parse(localStorage.getItem(KEY_MEDS) || '{}'); }
+    catch { return {}; }
+  }
+  function saveMeds(map){
+    localStorage.setItem(KEY_MEDS, JSON.stringify(map));
+  }
+
+  function sortRecordsDesc(list){
+    return list.slice().sort((a,b) => (b.date+a.timeSlot+b.time) < (a.date+a.timeSlot+a.time) ? -1 : 1);
+  }
+
+  function getLastNDaysAvg(records, n){
+    const end = new Date();
+    end.setHours(23,59,59,999);
+    const start = new Date(end);
+    start.setDate(end.getDate() - (n-1));
+    start.setHours(0,0,0,0);
+
+    const inRange = records.filter(r => {
+      const d = parseDate(r.date);
+      return d >= start && d <= end;
+    });
+
+    if (!inRange.length) return null;
+    const sum = inRange.reduce((acc,r) => {
+      acc.sp += r.spAvg;
+      acc.dp += r.dpAvg;
+      acc.hr += r.hrAvg;
+      acc.n += 1;
+      return acc;
+    }, {sp:0, dp:0, hr:0, n:0});
+
+    return {
+      sp: Math.round(sum.sp / sum.n),
+      dp: Math.round(sum.dp / sum.n),
+      hr: Math.round(sum.hr / sum.n),
+      n: sum.n
+    };
+  }
+
+  // ---------- UI: Tabs ----------
+  const tabInput = $('tabInput');
+  const tabReview = $('tabReview');
+  const viewInput = $('viewInput');
+  const viewReview = $('viewReview');
+
+  function showTab(which){
+    const input = which === 'input';
+    tabInput.classList.toggle('active', input);
+    tabReview.classList.toggle('active', !input);
+    tabInput.setAttribute('aria-selected', input ? 'true' : 'false');
+    tabReview.setAttribute('aria-selected', input ? 'false' : 'true');
+    viewInput.classList.toggle('hidden', !input);
+    viewReview.classList.toggle('hidden', input);
+
+    if (!input){
+      refreshReview();
+    }
+  }
+
+  tabInput.addEventListener('click', () => showTab('input'));
+  tabReview.addEventListener('click', () => showTab('review'));
+
+  // ---------- UI: Date and time slot ----------
+  const inputDate = $('inputDate');
+  const reviewEndDate = $('reviewEndDate');
+  const timeSlot = $('timeSlot');
+  const timeCustom = $('timeCustom');
+
+  function autoTimeSlotForNow(){
+    const h = new Date().getHours();
+    return (h < 12) ? 'morning' : 'evening';
+  }
+
+  timeSlot.addEventListener('change', () => {
+    timeCustom.classList.toggle('hidden', timeSlot.value !== 'custom');
+  });
+
+  // ---------- UI: Medication toggle (per date) ----------
+  const medSwitch = $('medSwitch');
+  let meds = loadMeds();
+
+  function setMedUI(on){
+    medSwitch.classList.toggle('on', !!on);
+    medSwitch.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+
+  function currentInputDate(){
+    return inputDate.value || fmtDate(new Date());
+  }
+
+  function syncMedFromStore(){
+    const d = currentInputDate();
+    setMedUI(!!meds[d]);
+  }
+
+  function toggleMed(){
+    const d = currentInputDate();
+    meds[d] = !meds[d];
+    saveMeds(meds);
+    setMedUI(!!meds[d]);
+    // refresh lists
+    renderRecent();
+    refreshReview();
+  }
+
+  medSwitch.addEventListener('click', toggleMed);
+  medSwitch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMed(); }
+  });
+  inputDate.addEventListener('change', syncMedFromStore);
+
+  // ---------- UI: Range/number sync helpers ----------
+  function linkRangeNumber(rangeEl, numEl, min, max, onChange){
+    const syncTo = (v) => {
+      const val = clamp(Number(v), min, max);
+      rangeEl.value = String(val);
+      numEl.value = String(val);
+      onChange && onChange();
+    };
+
+    rangeEl.addEventListener('input', () => syncTo(rangeEl.value));
+    numEl.addEventListener('input', () => syncTo(numEl.value));
+
+    return {set: syncTo};
+  }
+
+  // Inputs
+  const sp1 = linkRangeNumber($('sp1r'), $('sp1n'), 100, 200, updateCats);
+  const dp1 = linkRangeNumber($('dp1r'), $('dp1n'), 60, 160, updateCats);
+  const hr1 = linkRangeNumber($('hr1r'), $('hr1n'), 60, 130, updateCats);
+  const sp2 = linkRangeNumber($('sp2r'), $('sp2n'), 100, 200, updateCats);
+  const dp2 = linkRangeNumber($('dp2r'), $('dp2n'), 60, 160, updateCats);
+  const hr2 = linkRangeNumber($('hr2r'), $('hr2n'), 60, 130, updateCats);
+
+  const cat1 = $('cat1');
+  const cat2 = $('cat2');
+
+  function updateCats(){
+    const c1 = bpCategory($('sp1n').value, $('dp1n').value);
+    const c2 = bpCategory($('sp2n').value, $('dp2n').value);
+
+    cat1.textContent = `${c1.label}`;
+    cat2.textContent = `${c2.label}`;
+
+    cat1.style.background = catColor(c1.key);
+    cat2.style.background = catColor(c2.key);
+
+    cat1.style.color = 'var(--text)';
+    cat2.style.color = 'var(--text)';
+  }
+
+  // ---------- Timer ----------
+  const timerEl = $('timer');
+  const btnTimer = $('btnTimer');
+  let timer = null;
+  let remain = 60;
+
+  function renderTimer(){
+    const mm = pad2(Math.floor(remain / 60));
+    const ss = pad2(remain % 60);
+    timerEl.textContent = `${mm}:${ss}`;
+  }
+
+  function stopTimer(){
+    if (timer){
+      clearInterval(timer);
+      timer = null;
+    }
+    btnTimer.textContent = 'Start';
+  }
+
+  function startTimer(){
+    if (timer){
+      stopTimer();
+      return;
+    }
+    remain = 60;
+    renderTimer();
+    btnTimer.textContent = 'Stop';
+    timer = setInterval(() => {
+      remain -= 1;
+      renderTimer();
+      if (remain <= 0){
+        stopTimer();
+        // gentle nudge
+        btnTimer.textContent = 'Start';
+        btnTimer.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:380});
+      }
+    }, 1000);
+  }
+
+  btnTimer.addEventListener('click', startTimer);
+
+  // ---------- Defaults: last 7 day avg or fallback ----------
+  const defaultBadge = $('defaultBadge');
+  const todayPill = $('todayPill');
+
+  function applyDefaults(){
+    const recs = loadRecords();
+    const avg7 = getLastNDaysAvg(recs, 7);
+
+    const def = avg7
+      ? {sp:avg7.sp, dp:avg7.dp, hr:avg7.hr, src:`7-day avg (n=${avg7.n})`}
+      : {sp:120, dp:80, hr:80, src:'Default 120/80 HR 80'};
+
+    defaultBadge.textContent = `Defaults: ${def.src}`;
+
+    sp1.set(def.sp); dp1.set(def.dp); hr1.set(def.hr);
+    sp2.set(def.sp); dp2.set(def.dp); hr2.set(def.hr);
+
+    updateCats();
+  }
+
+  $('btnQuickFill').addEventListener('click', applyDefaults);
+
+  // ---------- Save record (averaged from 2 readings) ----------
+  const btnSave = $('btnSave');
+
+  function currentSlot(){
+    const chosen = timeSlot.value;
+    if (chosen === 'auto') return autoTimeSlotForNow();
+    if (chosen === 'custom') return timeCustom.value;
+    return chosen;
+  }
+
+  function nowHHMM(){
+    const d = new Date();
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function saveAveraged(){
+    // Read values
+    const a = {
+      sp: Number($('sp1n').value),
+      dp: Number($('dp1n').value),
+      hr: Number($('hr1n').value),
+    };
+    const b = {
+      sp: Number($('sp2n').value),
+      dp: Number($('dp2n').value),
+      hr: Number($('hr2n').value),
+    };
+
+    // Basic validation
+    const ok = (v, lo, hi) => Number.isFinite(v) && v>=lo && v<=hi;
+    const valid =
+      ok(a.sp,100,200) && ok(a.dp,60,160) && ok(a.hr,60,130) &&
+      ok(b.sp,100,200) && ok(b.dp,60,160) && ok(b.hr,60,130);
+    if (!valid){
+      alert('Please ensure all values are within the allowed ranges.');
+      return;
+    }
+
+    const spAvg = Math.round((a.sp + b.sp) / 2);
+    const dpAvg = Math.round((a.dp + b.dp) / 2);
+    const hrAvg = Math.round((a.hr + b.hr) / 2);
+    const cat = bpCategory(spAvg, dpAvg);
+
+    const date = currentInputDate();
+    const slot = currentSlot();
+
+    const rec = {
+      id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + Math.random().toString(16).slice(2),
+      date,
+      time: nowHHMM(),
+      timeSlot: slot,
+      // raw readings
+      r1: a,
+      r2: b,
+      // averaged
+      spAvg,
+      dpAvg,
+      hrAvg,
+      category: cat.key,
+      // store meds flag at time of save (also stored per-day in meds map)
+      medsTaken: !!meds[date],
+      createdAt: Date.now()
+    };
+
+    const list = loadRecords();
+    list.push(rec);
+    saveRecords(list);
+
+    // Refresh
+    applyDefaults();
+    renderRecent();
+    refreshReview();
+
+    // Tiny feedback
+    btnSave.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:260});
+  }
+
+  btnSave.addEventListener('click', saveAveraged);
+
+  // ---------- Recent list ----------
+  const recentList = $('recentList');
+  const countBadge = $('countBadge');
+  const recentTip = $('recentTip');
+
+  function medEmoji(date){
+    return meds[date] ? '💊' : '';
+  }
+
+  function renderRecent(){
+    const list = sortRecordsDesc(loadRecords());
+    countBadge.textContent = `${list.length} total`;
+
+    const top = list.slice(0, 10);
+    recentList.innerHTML = '';
+
+    if (!top.length){
+      recentList.innerHTML = `<div class="notice">No records yet. Add your first entry in <b>Input</b>.</div>`;
+      recentTip.textContent = 'Tip: Take two readings 1 minute apart. Save will store the average.';
+      return;
+    }
+
+    for (const r of top){
+      const cat = bpCategory(r.spAvg, r.dpAvg);
+      const left = document.createElement('div');
+      left.className = 'item';
+
+      const a = document.createElement('div');
+      a.className = 'a';
+      a.innerHTML = `
+        <div class="mono" style="font-weight:900">
+          ${r.spAvg}/${r.dpAvg} <span style="color:var(--muted); font-weight:700">mmHg</span>
+          <span style="margin-left:8px; color:var(--muted)">HR ${r.hrAvg}</span>
+        </div>
+        <div class="notice mono">
+          ${r.date} • ${prettySlot(r.timeSlot)} • ${r.time}
+          <span style="margin-left:8px">${medEmoji(r.date)}</span>
+        </div>
+      `;
+
+      const b = document.createElement('div');
+      b.className = 'b mono';
+      b.innerHTML = `
+        <div class="badge" style="background:${catColor(cat.key)}; color:var(--text); font-weight:900">${catText(cat.key)}</div>
+        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">Delete</button></div>
+      `;
+
+      left.appendChild(a);
+      left.appendChild(b);
+      recentList.appendChild(left);
+    }
+
+    recentTip.textContent = 'You can record multiple sessions per day (e.g., morning and evening). 7-day/4-week charts will switch to bars when a day has multiple readings.';
+
+    // Delete handler
+    recentList.querySelectorAll('button[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-del');
+        const list2 = loadRecords().filter(x => x.id !== id);
+        saveRecords(list2);
+        renderRecent();
+        refreshReview();
+      });
+    });
+  }
+
+  // ---------- Export/Import/Wipe ----------
+  $('btnExport').addEventListener('click', () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      records: loadRecords(),
+      meds: loadMeds(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bp-tracker-export-${fmtDate(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  $('btnImport').addEventListener('click', async () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'application/json';
+    inp.onchange = async () => {
+      const file = inp.files?.[0];
+      if (!file) return;
+      try{
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || typeof data !== 'object') throw new Error('Bad JSON');
+        if (!Array.isArray(data.records) || typeof data.meds !== 'object') throw new Error('Wrong schema');
+        saveRecords(data.records);
+        saveMeds(data.meds);
+        meds = loadMeds();
+        syncMedFromStore();
+        applyDefaults();
+        renderRecent();
+        refreshReview();
+      }catch(err){
+        alert('Import failed: ' + (err?.message || String(err)));
+      }
+    };
+    inp.click();
+  });
+
+  $('btnWipe').addEventListener('click', () => {
+    const ok = confirm('Wipe all BP records and medication flags from this browser?');
+    if (!ok) return;
+    localStorage.removeItem(KEY_REC);
+    localStorage.removeItem(KEY_MEDS);
+    meds = loadMeds();
+    syncMedFromStore();
+    applyDefaults();
+    renderRecent();
+    refreshReview();
+  });
+
+  // ---------- Review ----------
+  const reviewMode = $('reviewMode');
+  const btnRefresh = $('btnRefresh');
+  const rangeList = $('rangeList');
+  const reviewRangeBadge = $('reviewRangeBadge');
+  const reviewNote = $('reviewNote');
+  const statsPill = $('statsPill');
+
+  btnRefresh.addEventListener('click', refreshReview);
+  reviewMode.addEventListener('change', refreshReview);
+  reviewEndDate.addEventListener('change', refreshReview);
+
+  // Chart drawing
+  const canvas = $('chart');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvasToCSS(){
+    // keep crisp on HiDPI
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(320, Math.floor(rect.width * dpr));
+    const h = Math.max(240, Math.floor(rect.height * dpr));
+    if (canvas.width !== w || canvas.height !== h){
+      canvas.width = w;
+      canvas.height = h;
+    }
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(1,1);
+    return {w, h, dpr};
+  }
+
+  function drawRoundedRect(x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+  }
+
+  function clear(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  function text(x,y,str, color='rgba(233,238,246,.85)', size=12, align='left'){
+    ctx.fillStyle = color;
+    ctx.font = `600 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.textAlign = align;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(str, x, y);
+  }
+
+  function axisTicks(min, max, steps){
+    const span = max-min;
+    const raw = span / steps;
+    // round to 5 or 10
+    const step = raw <= 5 ? 5 : raw <= 10 ? 10 : raw <= 20 ? 20 : 25;
+    const ticks = [];
+    let v = Math.ceil(min/step)*step;
+    while (v <= max){
+      ticks.push(v);
+      v += step;
+    }
+    return ticks;
+  }
+
+  function drawBands1D(plot, yMapLeft, yMapRight){
+    // background bands: Normal, Stage1, Stage2, Stage3
+    const bands = [
+      {key:'n', label:'Normal', sp:[100,129], dp:[60,79]},
+      {key:'s1', label:'Stage 1', sp:[130,139], dp:[80,89]},
+      {key:'s2', label:'Stage 2', sp:[140,179], dp:[90,119]},
+      {key:'s3', label:'Stage 3', sp:[180,200], dp:[120,160]},
+    ];
+
+    // Fill full-width bands based on systolic ranges (left axis)
+    for (const b of bands){
+      const y1 = yMapLeft(b.sp[1]);
+      const y2 = yMapLeft(b.sp[0]);
+      ctx.fillStyle = catColor(b.key);
+      ctx.fillRect(plot.x, y1, plot.w, (y2 - y1));
+    }
+
+    // Draw a thin strip on the right for diastolic bands (so the dual-axis intent is visible)
+    const stripW = Math.max(8, plot.w * 0.03);
+    for (const b of bands){
+      const y1 = yMapRight(b.dp[1]);
+      const y2 = yMapRight(b.dp[0]);
+      ctx.fillStyle = catColor(b.key);
+      ctx.fillRect(plot.x + plot.w - stripW, y1, stripW, (y2 - y1));
+    }
+
+    // border around strip
+    ctx.strokeStyle = 'rgba(255,255,255,.10)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(plot.x + plot.w - stripW, plot.y, stripW, plot.h);
+  }
+
+  function drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight){
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+
+    // horizontal grid from left axis ticks
+    for (const t of yTicksLeft){
+      const y = yMapLeft(t);
+      ctx.beginPath();
+      ctx.moveTo(plot.x, y);
+      ctx.lineTo(plot.x + plot.w, y);
+      ctx.stroke();
+    }
+
+    // y labels
+    for (const t of yTicksLeft){
+      const y = yMapLeft(t);
+      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
+    }
+    for (const t of yTicksRight){
+      const y = yMapRight(t);
+      text(plot.x + plot.w + 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'left');
+    }
+
+    // plot border
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+  }
+
+  function drawLine(points, xMap, yMap, stroke='rgba(138,180,255,.95)'){
+    if (points.length < 1) return;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = stroke;
+    ctx.beginPath();
+    for (let i=0;i<points.length;i++){
+      const p = points[i];
+      const x = xMap(p.x);
+      const y = yMap(p.y);
+      if (i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // points
+    for (const p of points){
+      const x = xMap(p.x);
+      const y = yMap(p.y);
+      ctx.fillStyle = stroke;
+      ctx.beginPath();
+      ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawBarsOrPoints(series, plot, xCenters, yMap, color){
+    // series: array of {kind:'point', v:number} OR {kind:'bar', min:number, max:number}
+    for (let i=0;i<series.length;i++){
+      const x = xCenters[i];
+      const item = series[i];
+
+      if (item.kind === 'point'){
+        const y = yMap(item.v);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        const y1 = yMap(item.max);
+        const y2 = yMap(item.min);
+        const w = Math.max(6, plot.w / (series.length * 4));
+        ctx.fillStyle = color;
+        drawRoundedRect(x - w/2, y1, w, Math.max(2, y2-y1), 4);
+        ctx.fill();
+      }
+    }
+  }
+
+  function groupByDate(records){
+    const map = new Map();
+    for (const r of records){
+      if (!map.has(r.date)) map.set(r.date, []);
+      map.get(r.date).push(r);
+    }
+    // ensure deterministic ordering by time
+    for (const [k, arr] of map.entries()){
+      arr.sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+    }
+    return map;
+  }
+
+  function rangeDays(endDateStr, days){
+    const end = parseDate(endDateStr);
+    end.setHours(23,59,59,999);
+    const start = new Date(end);
+    start.setDate(end.getDate() - (days-1));
+    start.setHours(0,0,0,0);
+    return {start, end};
+  }
+
+  function listDays(start, end){
+    const out = [];
+    const d = new Date(start);
+    d.setHours(0,0,0,0);
+    while (d <= end){
+      out.push(fmtDate(d));
+      d.setDate(d.getDate()+1);
+    }
+    return out;
+  }
+
+  function refreshReview(){
+    const mode = reviewMode.value;
+    const endStr = reviewEndDate.value || fmtDate(new Date());
+
+    let days = 1;
+    if (mode === '7d') days = 7;
+    if (mode === '4w') days = 28;
+
+    const {start, end} = rangeDays(endStr, days);
+    const dayKeys = listDays(start, end);
+
+    const all = loadRecords();
+    const inRange = all.filter(r => {
+      const d = parseDate(r.date);
+      return d >= start && d <= end;
+    });
+
+    const byDate = groupByDate(inRange);
+
+    // badge + note
+    const title = mode==='1d' ? '1 day' : mode==='7d' ? '7 days' : '4 weeks';
+    reviewRangeBadge.textContent = `${title} ending ${endStr}`;
+
+    // list
+    renderRangeList(dayKeys, byDate);
+
+    // chart
+    if (mode === '1d'){
+      drawOneDay(endStr, byDate.get(endStr) || []);
+    } else {
+      drawMultiDay(dayKeys, byDate, mode);
+    }
+
+    // stats
+    const n = inRange.length;
+    if (!n){
+      statsPill.textContent = 'No data in range';
+      reviewNote.textContent = 'Add entries in Input, then come back here.';
+      return;
+    }
+
+    const spAvg = Math.round(inRange.reduce((s,r)=>s+r.spAvg,0)/n);
+    const dpAvg = Math.round(inRange.reduce((s,r)=>s+r.dpAvg,0)/n);
+    const cat = bpCategory(spAvg, dpAvg);
+    statsPill.textContent = `Avg: ${spAvg}/${dpAvg} • ${catText(cat.key)} (${n} records)`;
+    reviewNote.textContent = 'Bars = multiple readings in one day (min→max). Points = single reading in a day.';
+  }
+
+  function renderRangeList(dayKeys, byDate){
+    rangeList.innerHTML = '';
+
+    // newest first
+    const reversed = dayKeys.slice().reverse();
+
+    let any = false;
+
+    for (const d of reversed){
+      const arr = (byDate.get(d) || []).slice();
+      const med = meds[d] ? '💊' : '';
+
+      const container = document.createElement('div');
+      container.className = 'item';
+
+      const left = document.createElement('div');
+      left.className = 'a';
+      left.innerHTML = `<div class="mono" style="font-weight:900">${d} <span style="margin-left:8px">${med}</span></div>`;
+
+      const right = document.createElement('div');
+      right.className = 'b mono';
+
+      if (!arr.length){
+        right.innerHTML = `<div>—</div><div>no entries</div>`;
+      } else {
+        any = true;
+        const lines = arr
+          .sort((a,b) => (a.timeSlot||'').localeCompare(b.timeSlot||'') || (a.time||'').localeCompare(b.time||''))
+          .map(r => {
+            const c = bpCategory(r.spAvg, r.dpAvg);
+            return `${prettySlot(r.timeSlot)} ${r.time} • ${r.spAvg}/${r.dpAvg} • ${catText(c.key)}`;
+          });
+        right.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+      }
+
+      container.appendChild(left);
+      container.appendChild(right);
+      rangeList.appendChild(container);
+    }
+
+    if (!any){
+      rangeList.innerHTML = `<div class="notice">No records in this range.</div>`;
+    }
+  }
+
+  function drawOneDay(dateStr, records){
+    const {w, h} = resizeCanvasToCSS();
+    clear();
+
+    const padL = 48, padR = 48, padT = 18, padB = 42;
+    const plot = {x:padL, y:padT, w:w-padL-padR, h:h-padT-padB};
+
+    // axes ranges fixed per requirement
+    const spMin = 100, spMax = 200;
+    const dpMin = 60, dpMax = 160;
+
+    const yMapLeft = (v) => plot.y + plot.h * (1 - (v - spMin) / (spMax - spMin));
+    const yMapRight = (v) => plot.y + plot.h * (1 - (v - dpMin) / (dpMax - dpMin));
+
+    // background
+    drawBands1D(plot, yMapLeft, yMapRight);
+
+    // ticks
+    const yTicksLeft = axisTicks(spMin, spMax, 5);
+    const yTicksRight = axisTicks(dpMin, dpMax, 5);
+
+    drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight);
+
+    // x positions based on order in day
+    const sorted = records.slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
+
+    const n = Math.max(1, sorted.length);
+    const xMap = (i) => plot.x + (plot.w * (n===1 ? 0.5 : i/(n-1)));
+
+    // series
+    const spPts = sorted.map((r, i) => ({x:i, y:r.spAvg, meta:r}));
+    const dpPts = sorted.map((r, i) => ({x:i, y:r.dpAvg, meta:r}));
+
+    // lines
+    drawLine(spPts.map(p=>({x:p.x,y:p.y})), xMap, yMapLeft, 'rgba(138,180,255,.95)');
+    drawLine(dpPts.map(p=>({x:p.x,y:p.y})), xMap, yMapRight, 'rgba(255,196,61,.95)');
+
+    // x labels
+    ctx.fillStyle = 'rgba(168,179,199,.9)';
+    ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i=0;i<sorted.length;i++){
+      const r = sorted[i];
+      const x = xMap(i);
+      const label = `${prettySlot(r.timeSlot)}\n${r.time}`;
+      // multi-line
+      const parts = label.split('\n');
+      ctx.fillText(parts[0], x, plot.y + plot.h + 10);
+      ctx.fillText(parts[1], x, plot.y + plot.h + 24);
+    }
+
+    // Titles
+    text(plot.x, plot.y - 8, `Systolic (left) / Diastolic (right) — ${dateStr}`, 'rgba(233,238,246,.92)', 12, 'left');
+
+    // Legend
+    setLegend([
+      {label:'Systolic (SP) line', color:'rgba(138,180,255,.95)'},
+      {label:'Diastolic (DP) line', color:'rgba(255,196,61,.95)'},
+      {label:'Bands: Normal / Stage 1 / Stage 2 / Stage 3', color:'rgba(255,255,255,.25)'},
+      {label:'Right strip: DP bands', color:'rgba(255,255,255,.25)'}
+    ]);
+
+    // If no records, show message
+    if (!records.length){
+      ctx.fillStyle = 'rgba(233,238,246,.85)';
+      ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('No records for this day.', w/2, h/2);
+    }
+  }
+
+  function drawMultiDay(dayKeys, byDate, mode){
+    const {w, h} = resizeCanvasToCSS();
+    clear();
+
+    const padL = 56, padR = 16, padT = 18, padB = 44;
+    const plot = {x:padL, y:padT, w:w-padL-padR, h:h-padT-padB};
+
+    const yMin = 60; // show dp nicely
+    const yMax = 200;
+    const yMap = (v) => plot.y + plot.h * (1 - (v - yMin) / (yMax - yMin));
+
+    // background bands based on systolic thresholds for overall BP axis
+    const bands = [
+      {key:'n', label:'Normal', y1:100, y2:129},
+      {key:'s1', label:'Stage 1', y1:130, y2:139},
+      {key:'s2', label:'Stage 2', y1:140, y2:179},
+      {key:'s3', label:'Stage 3', y1:180, y2:200},
+    ];
+    for (const b of bands){
+      ctx.fillStyle = catColor(b.key);
+      const yy1 = yMap(b.y2);
+      const yy2 = yMap(b.y1);
+      ctx.fillRect(plot.x, yy1, plot.w, (yy2-yy1));
+    }
+
+    // grid and y axis ticks
+    const yTicks = axisTicks(yMin, yMax, 7);
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 1;
+    for (const t of yTicks){
+      const y = yMap(t);
+      ctx.beginPath();
+      ctx.moveTo(plot.x, y);
+      ctx.lineTo(plot.x + plot.w, y);
+      ctx.stroke();
+      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,.14)';
+    ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+
+    // x centers
+    const nDays = Math.max(1, dayKeys.length);
+    const xCenters = dayKeys.map((_, i) => plot.x + plot.w * (nDays===1 ? 0.5 : i/(nDays-1)));
+
+    // Build series with bar/point logic per day
+    const seriesSP = [];
+    const seriesDP = [];
+
+    for (const day of dayKeys){
+      const arr = (byDate.get(day) || []);
+      if (arr.length <= 1){
+        if (arr.length === 1){
+          seriesSP.push({kind:'point', v: arr[0].spAvg});
+          seriesDP.push({kind:'point', v: arr[0].dpAvg});
+        } else {
+          seriesSP.push({kind:'point', v: NaN});
+          seriesDP.push({kind:'point', v: NaN});
+        }
+      } else {
+        const sps = arr.map(r=>r.spAvg);
+        const dps = arr.map(r=>r.dpAvg);
+        seriesSP.push({kind:'bar', min: Math.min(...sps), max: Math.max(...sps)});
+        seriesDP.push({kind:'bar', min: Math.min(...dps), max: Math.max(...dps)});
+      }
+    }
+
+    // filter out NaN points by not drawing them
+    const colorSP = 'rgba(138,180,255,.95)';
+    const colorDP = 'rgba(255,196,61,.95)';
+
+    // draw with slight x offsets
+    const off = Math.max(6, plot.w / (dayKeys.length * 10));
+
+    // Bars/points for SP
+    for (let i=0;i<dayKeys.length;i++){
+      const x = xCenters[i] - off;
+      const item = seriesSP[i];
+      if (item.kind==='point'){
+        if (!Number.isFinite(item.v)) continue;
+        ctx.fillStyle = colorSP;
+        ctx.beginPath();
+        ctx.arc(x, yMap(item.v), 4, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        const y1 = yMap(item.max);
+        const y2 = yMap(item.min);
+        const wBar = Math.max(6, plot.w / (dayKeys.length * 5));
+        ctx.fillStyle = colorSP;
+        drawRoundedRect(x - wBar/2, y1, wBar, Math.max(2, y2-y1), 4);
+        ctx.fill();
+      }
+    }
+
+    // Bars/points for DP
+    for (let i=0;i<dayKeys.length;i++){
+      const x = xCenters[i] + off;
+      const item = seriesDP[i];
+      if (item.kind==='point'){
+        if (!Number.isFinite(item.v)) continue;
+        ctx.fillStyle = colorDP;
+        ctx.beginPath();
+        ctx.arc(x, yMap(item.v), 4, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        const y1 = yMap(item.max);
+        const y2 = yMap(item.min);
+        const wBar = Math.max(6, plot.w / (dayKeys.length * 5));
+        ctx.fillStyle = colorDP;
+        drawRoundedRect(x - wBar/2, y1, wBar, Math.max(2, y2-y1), 4);
+        ctx.fill();
+      }
+    }
+
+    // x labels (sparse for 4w)
+    const step = mode==='4w' ? 4 : 1;
+    ctx.fillStyle = 'rgba(168,179,199,.9)';
+    ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i=0;i<dayKeys.length;i+=step){
+      const x = xCenters[i];
+      const d = dayKeys[i];
+      // show MM-DD
+      ctx.fillText(d.slice(5), x, plot.y + plot.h + 10);
+      if (meds[d]){
+        ctx.fillText('💊', x, plot.y + plot.h + 24);
+      }
+    }
+
+    text(plot.x, plot.y - 8, `BP over time (SP & DP) — ${mode==='7d'?'7 days':'4 weeks'}`, 'rgba(233,238,246,.92)', 12, 'left');
+
+    setLegend([
+      {label:'SP (systolic)', color: colorSP},
+      {label:'DP (diastolic)', color: colorDP},
+      {label:'Points: single reading in a day', color:'rgba(255,255,255,.25)'},
+      {label:'Bars: min→max when multiple readings', color:'rgba(255,255,255,.25)'},
+      {label:'💊 medication taken (per day)', color:'rgba(255,255,255,.25)'}
+    ]);
+
+    // If empty
+    const any = Array.from(byDate.values()).some(arr => arr.length);
+    if (!any){
+      ctx.fillStyle = 'rgba(233,238,246,.85)';
+      ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('No records in this range.', w/2, h/2);
+    }
+  }
+
+  function setLegend(items){
+    const el = $('legend');
+    el.innerHTML = '';
+    for (const it of items){
+      const d = document.createElement('div');
+      d.className = 'swatch';
+      const sq = document.createElement('span');
+      sq.className = 'sq';
+      sq.style.background = it.color;
+      sq.style.borderColor = 'rgba(255,255,255,.20)';
+      const t = document.createElement('span');
+      t.textContent = it.label;
+      d.appendChild(sq);
+      d.appendChild(t);
+      el.appendChild(d);
+    }
+  }
+
+  // ---------- Init ----------
+  function init(){
+    const today = fmtDate(new Date());
+    todayPill.textContent = `Today: ${today}`;
+
+    inputDate.value = today;
+    reviewEndDate.value = today;
+
+    // default slot behavior
+    timeSlot.value = 'auto';
+    timeCustom.value = 'midday';
+    timeCustom.classList.add('hidden');
+
+    meds = loadMeds();
+    syncMedFromStore();
+
+    applyDefaults();
+    renderRecent();
+    refreshReview();
+
+    window.addEventListener('resize', () => {
+      if (!viewReview.classList.contains('hidden')) refreshReview();
+    });
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
