@@ -177,6 +177,18 @@
     .btn.danger{background: rgba(255,70,70,.14)}
     .btn:disabled{opacity:.45; cursor:not-allowed}
 
+    .iconBtn{
+      width:36px;
+      height:36px;
+      padding:0;
+      border-radius:50%;
+      font-size:20px;
+      line-height:1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
     .toggle{
       display:flex; align-items:center; gap:10px;
       padding:10px 12px;
@@ -335,154 +347,159 @@
             <div class="badge" id="defaultBadge"></div>
           </div>
           <div class="bd">
-
-            <div class="row controls">
-              <div class="rightStrip">
-                <label for="inputDate">Date</label>
-                <input type="date" id="inputDate" />
-              </div>
-
-              <div class="rightStrip">
-                <label for="timeSlot">Time</label>
-                <select id="timeSlot">
-                  <option value="auto">Auto</option>
-                  <option value="morning">Morning</option>
-                  <option value="evening">Evening</option>
-                  <option value="custom">Custom</option>
-                </select>
-                <select id="timeCustom" class="hidden">
-                  <option value="midday">Midday</option>
-                  <option value="night">Night</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div class="toggle" title="This is stored per day">
-                <div class="switch" id="medSwitch" role="switch" aria-checked="false" tabindex="0"></div>
-                <div>
-                  <div style="font-weight:800">Medication taken today</div>
-                  <div class="notice">Stored per date. It will show in the review list.</div>
-                </div>
-              </div>
+            <div class="row" style="justify-content:flex-end">
+              <button class="btn secondary iconBtn" id="btnShowInput" aria-expanded="false" aria-controls="inputForm">+</button>
             </div>
 
-            <div class="sep"></div>
-
-            <div class="row">
-              <div class="field" style="flex:1">
-                <div class="top">
-                  <div>
-                    <div style="font-weight:800">Reading #1</div>
-                    <div class="hint">Enter systolic / diastolic / heart rate</div>
-                  </div>
-                  <div class="badge mono" id="cat1">—</div>
+            <div id="inputForm" class="hidden">
+              <div class="row controls">
+                <div class="rightStrip">
+                  <label for="inputDate">Date</label>
+                  <input type="date" id="inputDate" />
                 </div>
 
-                <div class="triple">
-                  <div>
-                    <label>Systolic (SP)</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                    </div>
-                    <input type="range" id="sp1r" min="100" max="200" step="1" />
-                  </div>
+                <div class="rightStrip">
+                  <label for="timeSlot">Time</label>
+                  <select id="timeSlot">
+                    <option value="auto">Auto</option>
+                    <option value="morning">Morning</option>
+                    <option value="evening">Evening</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                  <select id="timeCustom" class="hidden">
+                    <option value="midday">Midday</option>
+                    <option value="night">Night</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
 
+                <div class="toggle" title="This is stored per day">
+                  <div class="switch" id="medSwitch" role="switch" aria-checked="false" tabindex="0"></div>
                   <div>
-                    <label>Diastolic (DP)</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                    </div>
-                    <input type="range" id="dp1r" min="60" max="160" step="1" />
-                  </div>
-
-                  <div>
-                    <label>Heart rate</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
-                    </div>
-                    <input type="range" id="hr1r" min="60" max="130" step="1" />
+                    <div style="font-weight:800">Medication taken today</div>
+                    <div class="notice">Stored per date. It will show in the review list.</div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="row">
-              <div class="timer" style="flex:1">
-                <div>
-                  <div style="font-weight:800">1-minute rest timer</div>
-                  <div class="mini">Use between Reading #1 and Reading #2</div>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;">
-                  <div class="mono"><strong id="timer">01:00</strong></div>
-                  <button class="btn secondary" id="btnTimer">Start</button>
-                </div>
-              </div>
-            </div>
+              <div class="sep"></div>
 
-            <div class="row">
-              <div class="field" style="flex:1">
-                <div class="top">
-                  <div>
-                    <div style="font-weight:800">Reading #2</div>
-                    <div class="hint">Timer optional, but recommended</div>
-                  </div>
-                  <div class="badge mono" id="cat2">—</div>
-                </div>
-
-                <div class="triple">
-                  <div>
-                    <label>Systolic (SP)</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+              <div class="row">
+                <div class="field" style="flex:1">
+                  <div class="top">
+                    <div>
+                      <div style="font-weight:800">Reading #1</div>
+                      <div class="hint">Enter systolic / diastolic / heart rate</div>
                     </div>
-                    <input type="range" id="sp2r" min="100" max="200" step="1" />
+                    <div class="badge mono" id="cat1">—</div>
                   </div>
 
-                  <div>
-                    <label>Diastolic (DP)</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                  <div class="triple">
+                    <div>
+                      <label>Systolic (SP)</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      </div>
+                      <input type="range" id="sp1r" min="100" max="200" step="1" />
                     </div>
-                    <input type="range" id="dp2r" min="60" max="160" step="1" />
-                  </div>
 
-                  <div>
-                    <label>Heart rate</label>
-                    <div class="valbox">
-                      <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                    <div>
+                      <label>Diastolic (DP)</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      </div>
+                      <input type="range" id="dp1r" min="60" max="160" step="1" />
                     </div>
-                    <input type="range" id="hr2r" min="60" max="130" step="1" />
+
+                    <div>
+                      <label>Heart rate</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                      </div>
+                      <input type="range" id="hr1r" min="60" max="130" step="1" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="row" style="justify-content:space-between">
-              <div class="notice" style="max-width:520px">
-                Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.
+              <div class="row">
+                <div class="timer" style="flex:1">
+                  <div>
+                    <div style="font-weight:800">1-minute rest timer</div>
+                    <div class="mini">Use between Reading #1 and Reading #2</div>
+                  </div>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="mono"><strong id="timer">01:00</strong></div>
+                    <button class="btn secondary" id="btnTimer">Start</button>
+                  </div>
+                </div>
               </div>
-              <div style="display:flex; gap:10px; flex-wrap:wrap">
-                <button class="btn secondary" id="btnQuickFill">Reset to defaults</button>
-                <button class="btn" id="btnSave">Save averaged record</button>
-              </div>
-            </div>
 
-            <div class="sep"></div>
+              <div class="row">
+                <div class="field" style="flex:1">
+                  <div class="top">
+                    <div>
+                      <div style="font-weight:800">Reading #2</div>
+                      <div class="hint">Timer optional, but recommended</div>
+                    </div>
+                    <div class="badge mono" id="cat2">—</div>
+                  </div>
 
-            <div class="row" style="justify-content:space-between">
-              <div class="notice">
-                Data is stored locally in your browser via <code>localStorage</code>.
+                  <div class="triple">
+                    <div>
+                      <label>Systolic (SP)</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      </div>
+                      <input type="range" id="sp2r" min="100" max="200" step="1" />
+                    </div>
+
+                    <div>
+                      <label>Diastolic (DP)</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      </div>
+                      <input type="range" id="dp2r" min="60" max="160" step="1" />
+                    </div>
+
+                    <div>
+                      <label>Heart rate</label>
+                      <div class="valbox">
+                        <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
+                        <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                      </div>
+                      <input type="range" id="hr2r" min="60" max="130" step="1" />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div style="display:flex; gap:10px; flex-wrap:wrap">
-                <button class="btn secondary smallBtn" id="btnExport">Export JSON</button>
-                <button class="btn secondary smallBtn" id="btnImport">Import JSON</button>
-                <button class="btn danger smallBtn" id="btnWipe">Wipe all data</button>
+
+              <div class="row" style="justify-content:space-between">
+                <div class="notice" style="max-width:520px">
+                  Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap">
+                  <button class="btn secondary" id="btnQuickFill">Reset to defaults</button>
+                  <button class="btn" id="btnSave">Save averaged record</button>
+                </div>
+              </div>
+
+              <div class="sep"></div>
+
+              <div class="row" style="justify-content:space-between">
+                <div class="notice">
+                  Data is stored locally in your browser via <code>localStorage</code>.
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap">
+                  <button class="btn secondary smallBtn" id="btnExport">Export JSON</button>
+                  <button class="btn secondary smallBtn" id="btnImport">Import JSON</button>
+                  <button class="btn danger smallBtn" id="btnWipe">Wipe all data</button>
+                </div>
               </div>
             </div>
 
@@ -1054,6 +1071,14 @@
   const reviewRangeBadge = $('reviewRangeBadge');
   const reviewNote = $('reviewNote');
   const statsPill = $('statsPill');
+  const inputForm = $('inputForm');
+  const btnShowInput = $('btnShowInput');
+
+  btnShowInput.addEventListener('click', () => {
+    inputForm.classList.remove('hidden');
+    btnShowInput.classList.add('hidden');
+    btnShowInput.setAttribute('aria-expanded', 'true');
+  });
 
   btnRefresh.addEventListener('click', refreshReview);
   reviewMode.addEventListener('change', refreshReview);
@@ -1353,7 +1378,7 @@
     const {w, h} = resizeCanvasToCSS();
     clear();
 
-    const padL = 48, padR = 48, padT = 18, padB = 42;
+    const padL = 48, padR = 48, padT = 18, padB = 54;
     const plot = {x:padL, y:padT, w:w-padL-padR, h:h-padT-padB};
 
     // axes ranges fixed per requirement
@@ -1400,6 +1425,11 @@
       ctx.fillText(parts[0], x, plot.y + plot.h + 10);
       ctx.fillText(parts[1], x, plot.y + plot.h + 24);
     }
+    if (meds[dateStr]){
+      ctx.font = '600 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.fillStyle = 'rgba(168,179,199,.9)';
+      ctx.fillText('💊', plot.x + plot.w / 2, plot.y + plot.h + 38);
+    }
 
     // Titles
     text(plot.x, plot.y - 8, `Systolic (left) / Diastolic (right) — ${dateStr}`, 'rgba(233,238,246,.92)', 12, 'left');
@@ -1409,7 +1439,8 @@
       {label:'Systolic (SP) line', color:'rgba(138,180,255,.95)'},
       {label:'Diastolic (DP) line', color:'rgba(255,196,61,.95)'},
       {label:'Bands: Normal / Stage 1 / Stage 2 / Stage 3', color:'rgba(255,255,255,.25)'},
-      {label:'Right strip: DP bands', color:'rgba(255,255,255,.25)'}
+      {label:'Right strip: DP bands', color:'rgba(255,255,255,.25)'},
+      {label:'💊 medication taken (per day)', color:'rgba(255,255,255,.25)'}
     ]);
 
     // If no records, show message
