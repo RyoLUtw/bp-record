@@ -737,15 +737,52 @@
     return inputDate.value || fmtDate(new Date());
   }
 
+  function hasRecordForDate(date){
+    return loadRecords().some(r => r.date === date);
+  }
+
+  function updateRecordsMeds(date, value){
+    const list = loadRecords();
+    let changed = false;
+    for (const r of list){
+      if (r.date === date){
+        r.medsTaken = value;
+        changed = true;
+      }
+    }
+    if (changed) saveRecords(list);
+  }
+
   function syncMedFromStore(){
     const d = currentInputDate();
+    if (!hasRecordForDate(d)){
+      if (meds[d]){
+        delete meds[d];
+        saveMeds(meds);
+      }
+      setMedUI(false);
+      return;
+    }
     setMedUI(!!meds[d]);
   }
 
   function toggleMed(){
     const d = currentInputDate();
-    meds[d] = !meds[d];
+    const next = !meds[d];
+    if (hasRecordForDate(d)){
+      const ok = confirm('Changing medication will update previous records for this day. Continue?');
+      if (!ok){
+        setMedUI(!!meds[d]);
+        return;
+      }
+    }
+    if (next){
+      meds[d] = true;
+    } else {
+      delete meds[d];
+    }
     saveMeds(meds);
+    updateRecordsMeds(d, !!meds[d]);
     setMedUI(!!meds[d]);
     // refresh lists
     renderRecent();
@@ -934,6 +971,7 @@
     applyDefaults();
     renderRecent();
     refreshReview();
+    hideInputForm();
 
     // Tiny feedback
     btnSave.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:260});
@@ -1074,11 +1112,20 @@
   const inputForm = $('inputForm');
   const btnShowInput = $('btnShowInput');
 
-  btnShowInput.addEventListener('click', () => {
+  function showInputForm(){
     inputForm.classList.remove('hidden');
     btnShowInput.classList.add('hidden');
     btnShowInput.setAttribute('aria-expanded', 'true');
-  });
+    syncMedFromStore();
+  }
+
+  function hideInputForm(){
+    inputForm.classList.add('hidden');
+    btnShowInput.classList.remove('hidden');
+    btnShowInput.setAttribute('aria-expanded', 'false');
+  }
+
+  btnShowInput.addEventListener('click', showInputForm);
 
   btnRefresh.addEventListener('click', refreshReview);
   reviewMode.addEventListener('change', refreshReview);
