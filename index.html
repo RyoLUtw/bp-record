@@ -13,6 +13,7 @@
       --muted:#a8b3c7;
       --line:rgba(255,255,255,.08);
       --accent:#8ab4ff;
+      --font-scale: 2;
       --good:rgba(80, 200, 120, .16);
       --s1:rgba(255, 196, 61, .18);
       --s2:rgba(255, 120, 80, .18);
@@ -39,8 +40,8 @@
       display:flex; align-items:flex-end; justify-content:space-between;
       gap:12px; margin:10px 0 16px;
     }
-    header h1{font-size:18px; margin:0; letter-spacing:.2px;}
-    header .sub{font-size:12px; color:var(--muted); margin:0;}
+    header h1{font-size:calc(18px * var(--font-scale)); margin:0; letter-spacing:.2px;}
+    header .sub{font-size:calc(12px * var(--font-scale)); color:var(--muted); margin:0;}
 
     .topbar{
       position:sticky; top:0; z-index:5;
@@ -102,14 +103,14 @@
       align-items:flex-start;
       gap:10px;
     }
-    .card .hd h2{font-size:14px; margin:0;}
-    .card .hd .hint{font-size:12px; color:var(--muted); margin:2px 0 0;}
+    .card .hd h2{font-size:calc(14px * var(--font-scale)); margin:0;}
+    .card .hd .hint{font-size:calc(12px * var(--font-scale)); color:var(--muted); margin:2px 0 0;}
     .card .bd{padding:14px;}
 
     .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
     .row + .row{margin-top:12px}
 
-    label{font-size:12px; color:var(--muted)}
+    label{font-size:calc(12px * var(--font-scale)); color:var(--muted)}
 
     .pill{
       display:inline-flex; align-items:center; gap:8px;
@@ -117,7 +118,7 @@
       border-radius:999px;
       border:1px solid var(--line);
       background: rgba(0,0,0,.18);
-      font-size:12px;
+      font-size:calc(12px * var(--font-scale));
       color:var(--text);
     }
 
@@ -138,6 +139,20 @@
 
     .valbox{
       display:flex; align-items:center; gap:8px;
+    }
+
+    .stepBtn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      width:32px;
+      height:32px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
     input[type=number]{
@@ -182,7 +197,7 @@
       height:36px;
       padding:0;
       border-radius:50%;
-      font-size:20px;
+      font-size:calc(20px * var(--font-scale));
       line-height:1;
       display:inline-flex;
       align-items:center;
@@ -226,8 +241,8 @@
       justify-content:space-between;
       gap:12px;
     }
-    .timer strong{font-size:16px}
-    .timer .mini{font-size:12px; color:var(--muted)}
+    .timer strong{font-size:calc(16px * var(--font-scale))}
+    .timer .mini{font-size:calc(12px * var(--font-scale)); color:var(--muted)}
 
     .chartWrap{
       background: rgba(0,0,0,.18);
@@ -237,7 +252,7 @@
       overflow:hidden;
     }
     canvas{width:100%; height:280px; display:block}
-    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:12px}
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; color:var(--muted); font-size:calc(12px * var(--font-scale))}
     .swatch{display:inline-flex; align-items:center; gap:6px}
     .sq{width:10px; height:10px; border-radius:3px; background:rgba(255,255,255,.25); border:1px solid rgba(255,255,255,.25)}
 
@@ -255,17 +270,17 @@
       align-items:flex-start;
     }
     .item .a{display:flex; flex-direction:column; gap:4px}
-    .item .b{text-align:right; color:var(--muted); font-size:12px}
+    .item .b{text-align:right; color:var(--muted); font-size:calc(12px * var(--font-scale))}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
 
     .sep{height:1px; background: var(--line); margin:12px 0}
 
     .notice{
-      font-size:12px;
+      font-size:calc(12px * var(--font-scale));
       color: var(--muted);
       line-height:1.35;
     }
-    .notice code{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:11px;}
+    .notice code{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:calc(11px * var(--font-scale));}
 
     .controls{
       display:flex; flex-wrap:wrap; gap:10px; align-items:center;
@@ -287,7 +302,7 @@
       padding:3px 8px;
       border-radius:999px;
       border:1px solid var(--line);
-      font-size:11px;
+      font-size:calc(11px * var(--font-scale));
       color:var(--muted);
       gap:6px;
     }
@@ -308,7 +323,7 @@
     }
 
     .smallBtn{
-      font-size:12px;
+      font-size:calc(12px * var(--font-scale));
       padding:8px 10px;
       border-radius: 12px;
     }
@@ -396,29 +411,35 @@
 
                   <div class="triple">
                     <div>
-                      <label>Systolic (SP)</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                      </div>
+                    <label>Systolic (SP)</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease systolic reading 1">−</button>
+                      <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase systolic reading 1">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
                       <input type="range" id="sp1r" min="100" max="200" step="1" />
                     </div>
 
                     <div>
-                      <label>Diastolic (DP)</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                      </div>
+                    <label>Diastolic (DP)</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease diastolic reading 1">−</button>
+                      <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase diastolic reading 1">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
                       <input type="range" id="dp1r" min="60" max="160" step="1" />
                     </div>
 
                     <div>
-                      <label>Heart rate</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
-                      </div>
+                    <label>Heart rate</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease heart rate reading 1">−</button>
+                      <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase heart rate reading 1">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                    </div>
                       <input type="range" id="hr1r" min="60" max="130" step="1" />
                     </div>
                   </div>
@@ -450,29 +471,35 @@
 
                   <div class="triple">
                     <div>
-                      <label>Systolic (SP)</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                      </div>
+                    <label>Systolic (SP)</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease systolic reading 2">−</button>
+                      <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase systolic reading 2">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
                       <input type="range" id="sp2r" min="100" max="200" step="1" />
                     </div>
 
                     <div>
-                      <label>Diastolic (DP)</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
-                      </div>
+                    <label>Diastolic (DP)</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease diastolic reading 2">−</button>
+                      <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase diastolic reading 2">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                    </div>
                       <input type="range" id="dp2r" min="60" max="160" step="1" />
                     </div>
 
                     <div>
-                      <label>Heart rate</label>
-                      <div class="valbox">
-                        <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
-                        <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
-                      </div>
+                    <label>Heart rate</label>
+                    <div class="valbox">
+                      <button class="stepBtn" type="button" data-step="-1" aria-label="Decrease heart rate reading 2">−</button>
+                      <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
+                      <button class="stepBtn" type="button" data-step="1" aria-label="Increase heart rate reading 2">+</button>
+                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                    </div>
                       <input type="range" id="hr2r" min="60" max="130" step="1" />
                     </div>
                   </div>
@@ -595,6 +622,7 @@
     return new Date(y, m-1, dd);
   };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const fontScale = 2;
 
   // Categories (4 bands requested: normal, stage1, stage2, stage3)
   // We'll treat 120-129 systolic as "Normal" band for display simplicity.
@@ -737,52 +765,45 @@
     return inputDate.value || fmtDate(new Date());
   }
 
-  function hasRecordForDate(date){
-    return loadRecords().some(r => r.date === date);
+  function recordDateTime(record){
+    const d = parseDate(record.date);
+    const [h, m] = (record.time || '00:00').split(':').map(Number);
+    d.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0);
+    return d;
   }
 
-  function updateRecordsMeds(date, value){
-    const list = loadRecords();
-    let changed = false;
-    for (const r of list){
-      if (r.date === date){
-        r.medsTaken = value;
-        changed = true;
-      }
-    }
-    if (changed) saveRecords(list);
+  function defaultMedForDate(date){
+    const target = parseDate(date);
+    const targetMs = target.getTime();
+    const dayMs = 24 * 60 * 60 * 1000;
+    return loadRecords().some(r => {
+      if (!r.medsTaken) return false;
+      const recordMs = recordDateTime(r).getTime();
+      return Math.abs(recordMs - targetMs) <= dayMs;
+    });
   }
 
   function syncMedFromStore(){
     const d = currentInputDate();
-    if (!hasRecordForDate(d)){
-      if (meds[d]){
-        delete meds[d];
-        saveMeds(meds);
-      }
-      setMedUI(false);
-      return;
+    const defaultOn = defaultMedForDate(d);
+    setMedUI(defaultOn);
+    if (defaultOn){
+      meds[d] = true;
+    } else {
+      delete meds[d];
     }
-    setMedUI(!!meds[d]);
+    saveMeds(meds);
   }
 
   function toggleMed(){
     const d = currentInputDate();
-    const next = !meds[d];
-    if (hasRecordForDate(d)){
-      const ok = confirm('Changing medication will update previous records for this day. Continue?');
-      if (!ok){
-        setMedUI(!!meds[d]);
-        return;
-      }
-    }
+    const next = !medSwitch.classList.contains('on');
     if (next){
       meds[d] = true;
     } else {
       delete meds[d];
     }
     saveMeds(meds);
-    updateRecordsMeds(d, !!meds[d]);
     setMedUI(!!meds[d]);
     // refresh lists
     renderRecent();
@@ -797,17 +818,40 @@
 
   // ---------- UI: Range/number sync helpers ----------
   function linkRangeNumber(rangeEl, numEl, min, max, onChange){
-    const syncTo = (v) => {
+    const commit = (v) => {
       const val = clamp(Number(v), min, max);
       rangeEl.value = String(val);
       numEl.value = String(val);
       onChange && onChange();
     };
 
-    rangeEl.addEventListener('input', () => syncTo(rangeEl.value));
-    numEl.addEventListener('input', () => syncTo(numEl.value));
+    const commitNumber = () => {
+      if (numEl.value === '') return;
+      if (!Number.isFinite(Number(numEl.value))) return;
+      commit(numEl.value);
+    };
 
-    return {set: syncTo};
+    rangeEl.addEventListener('input', () => commit(rangeEl.value));
+    numEl.addEventListener('input', () => {
+      if (numEl.value === '') return;
+      if (!Number.isFinite(Number(numEl.value))) return;
+      onChange && onChange();
+    });
+    numEl.addEventListener('change', commitNumber);
+    numEl.addEventListener('blur', commitNumber);
+
+    const valbox = numEl.closest('.valbox');
+    if (valbox){
+      valbox.querySelectorAll('.stepBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const step = Number(btn.dataset.step) || 0;
+          const current = Number(numEl.value || rangeEl.value || min);
+          commit(clamp(current + step, min, max));
+        });
+      });
+    }
+
+    return {set: commit};
   }
 
   // Inputs
@@ -945,6 +989,7 @@
     const date = currentInputDate();
     const slot = currentSlot();
 
+    const medsTaken = medSwitch.classList.contains('on');
     const rec = {
       id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + Math.random().toString(16).slice(2),
       date,
@@ -959,13 +1004,19 @@
       hrAvg,
       category: cat.key,
       // store meds flag at time of save (also stored per-day in meds map)
-      medsTaken: !!meds[date],
+      medsTaken,
       createdAt: Date.now()
     };
 
     const list = loadRecords();
     list.push(rec);
     saveRecords(list);
+    if (medsTaken){
+      meds[date] = true;
+    } else {
+      delete meds[date];
+    }
+    saveMeds(meds);
 
     // Refresh
     applyDefaults();
@@ -1167,7 +1218,7 @@
 
   function text(x,y,str, color='rgba(233,238,246,.85)', size=12, align='left'){
     ctx.fillStyle = color;
-    ctx.font = `600 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.font = `600 ${size * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
     ctx.fillText(str, x, y);
@@ -1460,7 +1511,7 @@
 
     // x labels
     ctx.fillStyle = 'rgba(168,179,199,.9)';
-    ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.font = `600 ${11 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i=0;i<sorted.length;i++){
@@ -1473,7 +1524,7 @@
       ctx.fillText(parts[1], x, plot.y + plot.h + 24);
     }
     if (meds[dateStr]){
-      ctx.font = '600 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.font = `600 ${14 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.fillStyle = 'rgba(168,179,199,.9)';
       ctx.fillText('💊', plot.x + plot.w / 2, plot.y + plot.h + 38);
     }
@@ -1493,7 +1544,7 @@
     // If no records, show message
     if (!records.length){
       ctx.fillStyle = 'rgba(233,238,246,.85)';
-      ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.font = `700 ${14 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('No records for this day.', w/2, h/2);
@@ -1617,7 +1668,7 @@
     // x labels (sparse for 4w)
     const step = mode==='4w' ? 4 : 1;
     ctx.fillStyle = 'rgba(168,179,199,.9)';
-    ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.font = `600 ${11 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i=0;i<dayKeys.length;i+=step){
@@ -1644,7 +1695,7 @@
     const any = Array.from(byDate.values()).some(arr => arr.length);
     if (!any){
       ctx.fillStyle = 'rgba(233,238,246,.85)';
-      ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.font = `700 ${14 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('No records in this range.', w/2, h/2);
