@@ -13,7 +13,6 @@
       --muted:#a8b3c7;
       --line:rgba(255,255,255,.08);
       --accent:#8ab4ff;
-      --font-scale: 2;
       --good:rgba(80, 200, 120, .16);
       --s1:rgba(255, 196, 61, .18);
       --s2:rgba(255, 120, 80, .18);
@@ -21,6 +20,11 @@
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 18px;
       --radius2: 14px;
+      --font-scale: 1;
+      --control-scale: 2;
+      --input-scale: 2;
+      --step-scale: 2;
+      --action-scale: 2;
     }
 
     *{box-sizing:border-box}
@@ -71,6 +75,7 @@
       cursor:pointer;
       font-weight:600;
       letter-spacing:.2px;
+      font-size:calc(12px * var(--control-scale));
     }
     .tabbtn.active{
       background: rgba(138,180,255,.22);
@@ -145,14 +150,15 @@
       border:1px solid var(--line);
       background: rgba(255,255,255,.06);
       color: var(--text);
-      width:32px;
-      height:32px;
+      width:calc(32px * var(--step-scale));
+      height:calc(32px * var(--step-scale));
       border-radius:10px;
       font-weight:700;
       cursor:pointer;
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      font-size:calc(16px * var(--step-scale));
     }
 
     input[type=number]{
@@ -161,9 +167,10 @@
       border:1px solid var(--line);
       color:var(--text);
       border-radius:10px;
-      padding:6px 8px;
+      padding:12px 12px;
       font-weight:700;
       outline:none;
+      font-size:calc(12px * var(--input-scale));
     }
 
     input[type=range]{width: 100%}
@@ -187,6 +194,14 @@
       border-radius: 14px;
       cursor:pointer;
       font-weight:700;
+    }
+    .btn.big{
+      font-size:calc(12px * var(--action-scale));
+      padding:16px 20px;
+    }
+    .btn.tiny{
+      font-size:calc(12px * 0.5);
+      padding:6px 8px;
     }
     .btn.secondary{background: rgba(255,255,255,.06)}
     .btn.danger{background: rgba(255,70,70,.14)}
@@ -291,9 +306,10 @@
       border:1px solid var(--line);
       color: var(--text);
       border-radius: 12px;
-      padding:10px 10px;
+      padding:12px 12px;
       font-weight:600;
       outline:none;
+      font-size:calc(12px * var(--input-scale));
     }
 
     .badge{
@@ -454,7 +470,7 @@
                   </div>
                   <div style="display:flex; gap:10px; align-items:center;">
                     <div class="mono"><strong id="timer">01:00</strong></div>
-                    <button class="btn secondary" id="btnTimer">Start</button>
+                  <button class="btn secondary big" id="btnTimer">Start</button>
                   </div>
                 </div>
               </div>
@@ -511,8 +527,8 @@
                   Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap">
-                  <button class="btn secondary" id="btnQuickFill">Reset to defaults</button>
-                  <button class="btn" id="btnSave">Save averaged record</button>
+                  <button class="btn secondary big" id="btnQuickFill">Reset to defaults</button>
+                  <button class="btn big" id="btnSave">Save record</button>
                 </div>
               </div>
 
@@ -622,7 +638,8 @@
     return new Date(y, m-1, dd);
   };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const fontScale = 2;
+  const fontScale = 1;
+  const chartLabelScale = 1.5;
 
   // Categories (4 bands requested: normal, stage1, stage2, stage3)
   // We'll treat 120-129 systolic as "Normal" band for display simplicity.
@@ -1074,7 +1091,7 @@
       b.className = 'b mono';
       b.innerHTML = `
         <div class="badge" style="background:${catColor(cat.key)}; color:var(--text); font-weight:900">${catText(cat.key)}</div>
-        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">Delete</button></div>
+        <div style="margin-top:6px"><button class="btn secondary tiny" data-del="${r.id}">Delete</button></div>
       `;
 
       left.appendChild(a);
@@ -1286,11 +1303,11 @@
     // y labels
     for (const t of yTicksLeft){
       const y = yMapLeft(t);
-      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
+      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11 * chartLabelScale, 'right');
     }
     for (const t of yTicksRight){
       const y = yMapRight(t);
-      text(plot.x + plot.w + 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'left');
+      text(plot.x + plot.w + 8, y, String(t), 'rgba(168,179,199,.85)', 11 * chartLabelScale, 'left');
     }
 
     // plot border
@@ -1511,7 +1528,7 @@
 
     // x labels
     ctx.fillStyle = 'rgba(168,179,199,.9)';
-    ctx.font = `600 ${11 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.font = `600 ${11 * chartLabelScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i=0;i<sorted.length;i++){
@@ -1586,7 +1603,7 @@
       ctx.moveTo(plot.x, y);
       ctx.lineTo(plot.x + plot.w, y);
       ctx.stroke();
-      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
+      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11 * chartLabelScale, 'right');
     }
 
     ctx.strokeStyle = 'rgba(255,255,255,.14)';
@@ -1668,7 +1685,7 @@
     // x labels (sparse for 4w)
     const step = mode==='4w' ? 4 : 1;
     ctx.fillStyle = 'rgba(168,179,199,.9)';
-    ctx.font = `600 ${11 * fontScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.font = `600 ${11 * chartLabelScale}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i=0;i<dayKeys.length;i+=step){
