@@ -49,6 +49,36 @@
       background: linear-gradient(to bottom, rgba(11,15,20,.90), rgba(11,15,20,.55));
     }
 
+    .langSwitch{
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:10px;
+    }
+    .langGroup{
+      display:inline-flex;
+      gap:4px;
+      padding:4px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+    }
+    .langBtn{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      padding:6px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:.2px;
+      font-size:12px;
+    }
+    .langBtn.active{
+      background: rgba(138,180,255,.22);
+      color: var(--text);
+    }
+
     /* Slide switch tabs */
     .tabs{
       width:100%;
@@ -301,24 +331,55 @@
       border-radius: 12px;
     }
 
+    .driveRow{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px;
+      justify-content:space-between;
+    }
+
+    .driveStatus{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      color:var(--muted);
+      background: rgba(0,0,0,.18);
+    }
+
+    .btn.google{
+      background: rgba(255,255,255,.08);
+    }
+
     .hidden{display:none !important}
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="wrap">
 
     <div class="topbar">
+      <div class="langSwitch">
+        <div class="langGroup" role="group" aria-label="Language">
+          <button class="langBtn" type="button" data-lang="en">English</button>
+          <button class="langBtn" type="button" data-lang="zh">繁體中文</button>
+        </div>
+      </div>
       <header>
         <div>
-          <h1>BP Tracker</h1>
-          <p class="sub">Two readings ➜ auto-average ➜ review by day / 7 days / 4 weeks</p>
+          <h1 data-i18n="app.title">BP Tracker</h1>
+          <p class="sub" data-i18n="app.subtitle">Two readings ➜ auto-average ➜ review by day / 7 days / 4 weeks</p>
         </div>
         <div class="pill mono" id="todayPill"></div>
       </header>
 
       <div class="tabs" role="tablist" aria-label="Tabs">
-        <button class="tabbtn active" id="tabInput" role="tab" aria-selected="true">Input</button>
-        <button class="tabbtn" id="tabReview" role="tab" aria-selected="false">Review</button>
+        <button class="tabbtn active" id="tabInput" role="tab" aria-selected="true" data-i18n="tabs.input">Input</button>
+        <button class="tabbtn" id="tabReview" role="tab" aria-selected="false" data-i18n="tabs.review">Review</button>
       </div>
     </div>
 
@@ -329,8 +390,8 @@
         <div class="card">
           <div class="hd">
             <div>
-              <h2>Measurement input</h2>
-              <div class="hint">Defaults to last 7-day averages (or 120/80 HR 80)</div>
+              <h2 data-i18n="input.title">Measurement input</h2>
+              <div class="hint" data-i18n="input.hint">Defaults to last 7-day averages (or 120/80 HR 80)</div>
             </div>
             <div class="badge" id="defaultBadge"></div>
           </div>
@@ -338,30 +399,30 @@
 
             <div class="row controls">
               <div class="rightStrip">
-                <label for="inputDate">Date</label>
+                <label for="inputDate" data-i18n="labels.date">Date</label>
                 <input type="date" id="inputDate" />
               </div>
 
               <div class="rightStrip">
-                <label for="timeSlot">Time</label>
+                <label for="timeSlot" data-i18n="labels.time">Time</label>
                 <select id="timeSlot">
-                  <option value="auto">Auto</option>
-                  <option value="morning">Morning</option>
-                  <option value="evening">Evening</option>
-                  <option value="custom">Custom</option>
+                  <option value="auto" data-i18n="time.auto">Auto</option>
+                  <option value="morning" data-i18n="time.morning">Morning</option>
+                  <option value="evening" data-i18n="time.evening">Evening</option>
+                  <option value="custom" data-i18n="time.custom">Custom</option>
                 </select>
                 <select id="timeCustom" class="hidden">
-                  <option value="midday">Midday</option>
-                  <option value="night">Night</option>
-                  <option value="other">Other</option>
+                  <option value="midday" data-i18n="time.midday">Midday</option>
+                  <option value="night" data-i18n="time.night">Night</option>
+                  <option value="other" data-i18n="time.other">Other</option>
                 </select>
               </div>
 
-              <div class="toggle" title="This is stored per day">
+              <div class="toggle" title="This is stored per day" data-i18n-title="medication.titleHint">
                 <div class="switch" id="medSwitch" role="switch" aria-checked="false" tabindex="0"></div>
                 <div>
-                  <div style="font-weight:800">Medication taken today</div>
-                  <div class="notice">Stored per date. It will show in the review list.</div>
+                  <div style="font-weight:800" data-i18n="medication.title">Medication taken today</div>
+                  <div class="notice" data-i18n="medication.note">Stored per date. It will show in the review list.</div>
                 </div>
               </div>
             </div>
@@ -372,36 +433,36 @@
               <div class="field" style="flex:1">
                 <div class="top">
                   <div>
-                    <div style="font-weight:800">Reading #1</div>
-                    <div class="hint">Enter systolic / diastolic / heart rate</div>
+                    <div style="font-weight:800" data-i18n="reading.one.title">Reading #1</div>
+                    <div class="hint" data-i18n="reading.hint">Enter systolic / diastolic / heart rate</div>
                   </div>
                   <div class="badge mono" id="cat1">—</div>
                 </div>
 
                 <div class="triple">
                   <div>
-                    <label>Systolic (SP)</label>
+                    <label data-i18n="labels.systolic">Systolic (SP)</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                     </div>
                     <input type="range" id="sp1r" min="100" max="200" step="1" />
                   </div>
 
                   <div>
-                    <label>Diastolic (DP)</label>
+                    <label data-i18n="labels.diastolic">Diastolic (DP)</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                     </div>
                     <input type="range" id="dp1r" min="60" max="160" step="1" />
                   </div>
 
                   <div>
-                    <label>Heart rate</label>
+                    <label data-i18n="labels.heartRate">Heart rate</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                     </div>
                     <input type="range" id="hr1r" min="60" max="130" step="1" />
                   </div>
@@ -412,12 +473,12 @@
             <div class="row">
               <div class="timer" style="flex:1">
                 <div>
-                  <div style="font-weight:800">1-minute rest timer</div>
-                  <div class="mini">Use between Reading #1 and Reading #2</div>
+                  <div style="font-weight:800" data-i18n="timer.title">1-minute rest timer</div>
+                  <div class="mini" data-i18n="timer.subtitle">Use between Reading #1 and Reading #2</div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                   <div class="mono"><strong id="timer">01:00</strong></div>
-                  <button class="btn secondary" id="btnTimer">Start</button>
+                  <button class="btn secondary" id="btnTimer" data-i18n="actions.start">Start</button>
                 </div>
               </div>
             </div>
@@ -426,36 +487,36 @@
               <div class="field" style="flex:1">
                 <div class="top">
                   <div>
-                    <div style="font-weight:800">Reading #2</div>
-                    <div class="hint">Timer optional, but recommended</div>
+                    <div style="font-weight:800" data-i18n="reading.two.title">Reading #2</div>
+                    <div class="hint" data-i18n="reading.two.hint">Timer optional, but recommended</div>
                   </div>
                   <div class="badge mono" id="cat2">—</div>
                 </div>
 
                 <div class="triple">
                   <div>
-                    <label>Systolic (SP)</label>
+                    <label data-i18n="labels.systolic">Systolic (SP)</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                     </div>
                     <input type="range" id="sp2r" min="100" max="200" step="1" />
                   </div>
 
                   <div>
-                    <label>Diastolic (DP)</label>
+                    <label data-i18n="labels.diastolic">Diastolic (DP)</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">mmHg</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                     </div>
                     <input type="range" id="dp2r" min="60" max="160" step="1" />
                   </div>
 
                   <div>
-                    <label>Heart rate</label>
+                    <label data-i18n="labels.heartRate">Heart rate</label>
                     <div class="valbox">
                       <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
-                      <span class="mono" style="color:var(--muted); font-weight:700">bpm</span>
+                      <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                     </div>
                     <input type="range" id="hr2r" min="60" max="130" step="1" />
                   </div>
@@ -464,25 +525,42 @@
             </div>
 
             <div class="row" style="justify-content:space-between">
-              <div class="notice" style="max-width:520px">
+              <div class="notice" style="max-width:520px" data-i18n="notices.saveAverage">
                 Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.
               </div>
               <div style="display:flex; gap:10px; flex-wrap:wrap">
-                <button class="btn secondary" id="btnQuickFill">Reset to defaults</button>
-                <button class="btn" id="btnSave">Save averaged record</button>
+                <button class="btn secondary" id="btnQuickFill" data-i18n="actions.resetDefaults">Reset to defaults</button>
+                <button class="btn" id="btnSave" data-i18n="actions.saveAveraged">Save averaged record</button>
               </div>
             </div>
 
             <div class="sep"></div>
 
             <div class="row" style="justify-content:space-between">
-              <div class="notice">
+              <div class="notice" data-i18n-html="notices.localStorage">
                 Data is stored locally in your browser via <code>localStorage</code>.
               </div>
               <div style="display:flex; gap:10px; flex-wrap:wrap">
-                <button class="btn secondary smallBtn" id="btnExport">Export JSON</button>
-                <button class="btn secondary smallBtn" id="btnImport">Import JSON</button>
-                <button class="btn danger smallBtn" id="btnWipe">Wipe all data</button>
+                <button class="btn secondary smallBtn" id="btnExport" data-i18n="actions.export">Export JSON</button>
+                <button class="btn secondary smallBtn" id="btnImport" data-i18n="actions.import">Import JSON</button>
+                <button class="btn danger smallBtn" id="btnWipe" data-i18n="actions.wipe">Wipe all data</button>
+              </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <div class="row driveRow">
+              <div class="notice" data-i18n-html="drive.backupNotice">
+                Save a backup in your Google Drive <strong>AppData</strong> folder (hidden from normal view).
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+                <span class="driveStatus" id="driveStatus" data-i18n="drive.signedOut">Drive: signed out</span>
+                <button class="btn google smallBtn" id="btnDriveSignIn" data-i18n="drive.signIn">Sign in to Google Drive</button>
+                <button class="btn secondary smallBtn" id="btnDriveSave" disabled data-i18n="drive.save">Save to Drive</button>
+                <label class="notice" style="display:flex; align-items:center; gap:6px">
+                  <input type="checkbox" id="driveStaySignedIn" />
+                  <span data-i18n="drive.staySignedIn">Stay signed in</span>
+                </label>
               </div>
             </div>
 
@@ -492,8 +570,8 @@
         <div class="card">
           <div class="hd">
             <div>
-              <h2>Recent records</h2>
-              <div class="hint">Latest 10 averaged entries</div>
+              <h2 data-i18n="recent.title">Recent records</h2>
+              <div class="hint" data-i18n="recent.hint">Latest 10 averaged entries</div>
             </div>
             <div class="badge mono" id="countBadge"></div>
           </div>
@@ -514,25 +592,25 @@
         <div class="card">
           <div class="hd">
             <div>
-              <h2>Review</h2>
-              <div class="hint">1 day (dual-axis) • 7 days • 4 weeks</div>
+              <h2 data-i18n="review.title">Review</h2>
+              <div class="hint" data-i18n="review.hint">1 day (dual-axis) • 7 days • 4 weeks</div>
             </div>
             <div class="badge mono" id="reviewRangeBadge"></div>
           </div>
           <div class="bd">
 
             <div class="row controls">
-              <label for="reviewMode">Mode</label>
+              <label for="reviewMode" data-i18n="review.modeLabel">Mode</label>
               <select id="reviewMode">
-                <option value="1d">1 day</option>
-                <option value="7d">7 days</option>
-                <option value="4w">4 weeks</option>
+                <option value="1d" data-i18n="review.mode1d">1 day</option>
+                <option value="7d" data-i18n="review.mode7d">7 days</option>
+                <option value="4w" data-i18n="review.mode4w">4 weeks</option>
               </select>
 
-              <label for="reviewEndDate">End date</label>
+              <label for="reviewEndDate" data-i18n="review.endDateLabel">End date</label>
               <input type="date" id="reviewEndDate" />
 
-              <button class="btn secondary" id="btnRefresh">Refresh</button>
+              <button class="btn secondary" id="btnRefresh" data-i18n="actions.refresh">Refresh</button>
             </div>
 
             <div class="sep"></div>
@@ -553,8 +631,8 @@
         <div class="card">
           <div class="hd">
             <div>
-              <h2>Records in range</h2>
-              <div class="hint">Grouped by date; medication flag shown per day</div>
+              <h2 data-i18n="range.title">Records in range</h2>
+              <div class="hint" data-i18n="range.hint">Grouped by date; medication flag shown per day</div>
             </div>
           </div>
           <div class="bd">
@@ -579,6 +657,271 @@
   };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+  const i18n = {
+    en: {
+      'app.title': 'BP Tracker',
+      'app.subtitle': 'Two readings ➜ auto-average ➜ review by day / 7 days / 4 weeks',
+      'tabs.input': 'Input',
+      'tabs.review': 'Review',
+      'labels.date': 'Date',
+      'labels.time': 'Time',
+      'labels.systolic': 'Systolic (SP)',
+      'labels.diastolic': 'Diastolic (DP)',
+      'labels.heartRate': 'Heart rate',
+      'labels.hrShort': 'HR',
+      'units.mmhg': 'mmHg',
+      'units.bpm': 'bpm',
+      'time.auto': 'Auto',
+      'time.morning': 'Morning',
+      'time.evening': 'Evening',
+      'time.custom': 'Custom',
+      'time.midday': 'Midday',
+      'time.night': 'Night',
+      'time.other': 'Other',
+      'input.title': 'Measurement input',
+      'input.hint': 'Defaults to last 7-day averages (or 120/80 HR 80)',
+      'medication.title': 'Medication taken today',
+      'medication.note': 'Stored per date. It will show in the review list.',
+      'medication.titleHint': 'This is stored per day',
+      'reading.one.title': 'Reading #1',
+      'reading.two.title': 'Reading #2',
+      'reading.hint': 'Enter systolic / diastolic / heart rate',
+      'reading.two.hint': 'Timer optional, but recommended',
+      'timer.title': '1-minute rest timer',
+      'timer.subtitle': 'Use between Reading #1 and Reading #2',
+      'notices.saveAverage': 'Saved value = average of two readings (SP/DP/HR). Category uses the higher-risk of SP vs DP.',
+      'notices.localStorage': 'Data is stored locally in your browser via <code>localStorage</code>.',
+      'actions.start': 'Start',
+      'actions.stop': 'Stop',
+      'actions.resetDefaults': 'Reset to defaults',
+      'actions.saveAveraged': 'Save averaged record',
+      'actions.export': 'Export JSON',
+      'actions.import': 'Import JSON',
+      'actions.wipe': 'Wipe all data',
+      'actions.refresh': 'Refresh',
+      'actions.delete': 'Delete',
+      'defaults.prefix': 'Defaults: {source}',
+      'defaults.sevenDay': '7-day avg (n={count})',
+      'defaults.fallback': 'Default 120/80 HR 80',
+      'drive.backupNotice': 'Save a backup in your Google Drive <strong>AppData</strong> folder (hidden from normal view).',
+      'drive.signedOut': 'Drive: signed out',
+      'drive.reconnecting': 'Drive: reconnecting...',
+      'drive.connected': 'Drive: connected',
+      'drive.saving': 'Drive: saving...',
+      'drive.saved': 'Drive: saved to AppData',
+      'drive.signIn': 'Sign in to Google Drive',
+      'drive.save': 'Save to Drive',
+      'drive.staySignedIn': 'Stay signed in',
+      'recent.title': 'Recent records',
+      'recent.hint': 'Latest 10 averaged entries',
+      'recent.count': '{count} total',
+      'recent.empty': 'No records yet. Add your first entry in <b>Input</b>.',
+      'recent.tip': 'Tip: Take two readings 1 minute apart. Save will store the average.',
+      'review.title': 'Review',
+      'review.hint': '1 day (dual-axis) • 7 days • 4 weeks',
+      'review.modeLabel': 'Mode',
+      'review.endDateLabel': 'End date',
+      'review.mode1d': '1 day',
+      'review.mode7d': '7 days',
+      'review.mode4w': '4 weeks',
+      'review.rangeBadge': '{range} ending {date}',
+      'review.noData': 'No data in range',
+      'review.addEntries': 'Add entries in Input, then come back here.',
+      'review.avgStats': 'Avg: {sp}/{dp} • {cat} ({count} records)',
+      'review.note': 'Bars = multiple readings in one day (min→max). Points = single reading in a day.',
+      'range.title': 'Records in range',
+      'range.hint': 'Grouped by date; medication flag shown per day',
+      'range.noEntries': 'no entries',
+      'range.noRecords': 'No records in this range.',
+      'range.emptyDay': '—',
+      'chart.noRecordsDay': 'No records for this day.',
+      'chart.noRecordsRange': 'No records in this range.',
+      'chart.titleOneDay': 'Systolic (left) / Diastolic (right) — {date}',
+      'chart.titleMulti': 'BP over time (SP & DP) — {range}',
+      'legend.spLine': 'Systolic (SP) line',
+      'legend.dpLine': 'Diastolic (DP) line',
+      'legend.bands': 'Bands: Normal / Stage 1 / Stage 2 / Stage 3',
+      'legend.dpStrip': 'Right strip: DP bands',
+      'legend.sp': 'SP (systolic)',
+      'legend.dp': 'DP (diastolic)',
+      'legend.points': 'Points: single reading in a day',
+      'legend.bars': 'Bars: min→max when multiple readings',
+      'legend.meds': '💊 medication taken (per day)',
+      'cat.normal': 'Normal',
+      'cat.stage1': 'Stage 1',
+      'cat.stage2': 'Stage 2',
+      'cat.stage3': 'Stage 3',
+      'timeSlot.auto': 'Auto',
+      'timeSlot.morning': 'Morning',
+      'timeSlot.evening': 'Evening',
+      'timeSlot.custom': 'Custom',
+      'alerts.importFailed': 'Import failed: {message}',
+      'alerts.wipeConfirm': 'Wipe all BP records and medication flags from this browser?',
+      'alerts.signInFailed': 'Google sign-in failed: {message}',
+      'alerts.driveSaveFailed': 'Drive save failed: {message}',
+      'alerts.driveListFailed': 'Drive list failed.',
+      'alerts.driveDownloadFailed': 'Drive download failed.',
+      'alerts.driveUploadFailed': 'Drive upload failed.',
+      'drive.restoreFailed': 'Drive restore failed: {message}',
+      'drive.restoreEmpty': 'Drive restore failed: No backup found.',
+      'today.label': 'Today: {date}'
+    },
+    zh: {
+      'app.title': '血壓追蹤',
+      'app.subtitle': '兩次量測 ➜ 自動平均 ➜ 依日／7 天／4 週檢視',
+      'tabs.input': '輸入',
+      'tabs.review': '檢視',
+      'labels.date': '日期',
+      'labels.time': '時間',
+      'labels.systolic': '收縮壓 (SP)',
+      'labels.diastolic': '舒張壓 (DP)',
+      'labels.heartRate': '心跳',
+      'labels.hrShort': '心跳',
+      'units.mmhg': 'mmHg',
+      'units.bpm': 'bpm',
+      'time.auto': '自動',
+      'time.morning': '早上',
+      'time.evening': '晚上',
+      'time.custom': '自訂',
+      'time.midday': '中午',
+      'time.night': '深夜',
+      'time.other': '其他',
+      'input.title': '量測輸入',
+      'input.hint': '預設為近 7 天平均（或 120/80 心跳 80）',
+      'medication.title': '今日已服藥',
+      'medication.note': '以日期儲存，會在檢視清單顯示。',
+      'medication.titleHint': '此設定以日期儲存',
+      'reading.one.title': '量測 #1',
+      'reading.two.title': '量測 #2',
+      'reading.hint': '輸入收縮壓 / 舒張壓 / 心跳',
+      'reading.two.hint': '計時可略，但建議使用',
+      'timer.title': '1 分鐘休息計時器',
+      'timer.subtitle': '用於量測 #1 與 #2 之間',
+      'notices.saveAverage': '儲存值 = 兩次量測平均（SP/DP/HR）。分類以 SP 與 DP 中較高風險為準。',
+      'notices.localStorage': '資料會透過 <code>localStorage</code> 儲存在瀏覽器本機。',
+      'actions.start': '開始',
+      'actions.stop': '停止',
+      'actions.resetDefaults': '重設為預設值',
+      'actions.saveAveraged': '儲存平均紀錄',
+      'actions.export': '匯出 JSON',
+      'actions.import': '匯入 JSON',
+      'actions.wipe': '清除所有資料',
+      'actions.refresh': '更新',
+      'actions.delete': '刪除',
+      'defaults.prefix': '預設值：{source}',
+      'defaults.sevenDay': '近 7 天平均（n={count}）',
+      'defaults.fallback': '預設 120/80 心跳 80',
+      'drive.backupNotice': '將備份存到 Google Drive 的 <strong>AppData</strong> 資料夾（平常不顯示）。',
+      'drive.signedOut': 'Drive：已登出',
+      'drive.reconnecting': 'Drive：重新連線中...',
+      'drive.connected': 'Drive：已連線',
+      'drive.saving': 'Drive：儲存中...',
+      'drive.saved': 'Drive：已存到 AppData',
+      'drive.signIn': '登入 Google Drive',
+      'drive.save': '存到 Drive',
+      'drive.staySignedIn': '保持登入',
+      'recent.title': '最近紀錄',
+      'recent.hint': '最新 10 筆平均資料',
+      'recent.count': '{count} 筆',
+      'recent.empty': '尚無資料。請先在 <b>輸入</b> 新增第一筆。',
+      'recent.tip': '提示：建議兩次量測間隔 1 分鐘，儲存時會取平均。',
+      'review.title': '檢視',
+      'review.hint': '1 天（雙軸）• 7 天 • 4 週',
+      'review.modeLabel': '模式',
+      'review.endDateLabel': '結束日期',
+      'review.mode1d': '1 天',
+      'review.mode7d': '7 天',
+      'review.mode4w': '4 週',
+      'review.rangeBadge': '{range}（截至 {date}）',
+      'review.noData': '區間內無資料',
+      'review.addEntries': '先到「輸入」新增資料，再回來查看。',
+      'review.avgStats': '平均：{sp}/{dp} • {cat}（{count} 筆）',
+      'review.note': '柱狀 = 單日多筆（最小→最大），點狀 = 單日一筆。',
+      'range.title': '區間內紀錄',
+      'range.hint': '依日期分組；每日用藥狀態會顯示',
+      'range.noEntries': '無紀錄',
+      'range.noRecords': '此區間沒有紀錄。',
+      'range.emptyDay': '—',
+      'chart.noRecordsDay': '這一天沒有紀錄。',
+      'chart.noRecordsRange': '此區間沒有紀錄。',
+      'chart.titleOneDay': '收縮壓（左）/ 舒張壓（右）— {date}',
+      'chart.titleMulti': '血壓趨勢（SP & DP）— {range}',
+      'legend.spLine': '收縮壓（SP）折線',
+      'legend.dpLine': '舒張壓（DP）折線',
+      'legend.bands': '區間：正常／第 1 期／第 2 期／第 3 期',
+      'legend.dpStrip': '右側色帶：DP 區間',
+      'legend.sp': 'SP（收縮壓）',
+      'legend.dp': 'DP（舒張壓）',
+      'legend.points': '點狀：單日一筆',
+      'legend.bars': '柱狀：單日多筆（最小→最大）',
+      'legend.meds': '💊 當日已服藥',
+      'cat.normal': '正常',
+      'cat.stage1': '第 1 期',
+      'cat.stage2': '第 2 期',
+      'cat.stage3': '第 3 期',
+      'timeSlot.auto': '自動',
+      'timeSlot.morning': '早上',
+      'timeSlot.evening': '晚上',
+      'timeSlot.custom': '自訂',
+      'alerts.importFailed': '匯入失敗：{message}',
+      'alerts.wipeConfirm': '確定要清除本機所有血壓紀錄與用藥狀態嗎？',
+      'alerts.signInFailed': 'Google 登入失敗：{message}',
+      'alerts.driveSaveFailed': 'Drive 儲存失敗：{message}',
+      'alerts.driveListFailed': 'Drive 列表取得失敗。',
+      'alerts.driveDownloadFailed': 'Drive 下載失敗。',
+      'alerts.driveUploadFailed': 'Drive 上傳失敗。',
+      'drive.restoreFailed': 'Drive 還原失敗：{message}',
+      'drive.restoreEmpty': 'Drive 還原失敗：找不到備份。',
+      'today.label': '今日：{date}'
+    }
+  };
+
+  let currentLang = 'en';
+  const langButtons = Array.from(document.querySelectorAll('[data-lang]'));
+
+  function t(key, vars = {}){
+    const dict = i18n[currentLang] || i18n.en;
+    const fallback = i18n.en[key] || key;
+    const raw = dict[key] || fallback;
+    return raw.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
+  }
+
+  function applyStaticText(){
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      el.innerHTML = t(el.dataset.i18nHtml);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.setAttribute('title', t(el.dataset.i18nTitle));
+    });
+  }
+
+  const driveStatusState = {key: 'drive.signedOut', connected: false, vars: {}};
+
+  function setLanguage(lang){
+    currentLang = i18n[lang] ? lang : 'en';
+    localStorage.setItem('bp_lang', currentLang);
+    document.documentElement.lang = currentLang === 'zh' ? 'zh-Hant' : 'en';
+    document.title = t('app.title');
+    langButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === currentLang));
+    applyStaticText();
+    if (driveStatusState.key){
+      driveStatus.textContent = t(driveStatusState.key, driveStatusState.vars);
+    }
+    btnTimer.textContent = isTimerRunning ? t('actions.stop') : t('actions.start');
+    todayPill.textContent = t('today.label', {date: fmtDate(new Date())});
+    if (defaultMeta){
+      const source = defaultMeta.kind === 'sevenDay'
+        ? t('defaults.sevenDay', {count: defaultMeta.count})
+        : t('defaults.fallback');
+      defaultBadge.textContent = t('defaults.prefix', {source});
+    }
+    renderRecent();
+    refreshReview();
+  }
+
   // Categories (4 bands requested: normal, stage1, stage2, stage3)
   // We'll treat 120-129 systolic as "Normal" band for display simplicity.
   function bpCategory(sp, dp){
@@ -602,19 +945,19 @@
   }
 
   function catText(key){
-    if (key==='s1') return 'Stage 1';
-    if (key==='s2') return 'Stage 2';
-    if (key==='s3') return 'Stage 3';
-    return 'Normal';
+    if (key==='s1') return t('cat.stage1');
+    if (key==='s2') return t('cat.stage2');
+    if (key==='s3') return t('cat.stage3');
+    return t('cat.normal');
   }
 
   function prettySlot(slot){
-    if (slot==='morning') return 'Morning';
-    if (slot==='evening') return 'Evening';
-    if (slot==='midday') return 'Midday';
-    if (slot==='night') return 'Night';
-    if (slot==='other') return 'Other';
-    return 'Auto';
+    if (slot==='morning') return t('timeSlot.morning');
+    if (slot==='evening') return t('timeSlot.evening');
+    if (slot==='midday') return t('time.midday');
+    if (slot==='night') return t('time.night');
+    if (slot==='other') return t('time.other');
+    return t('timeSlot.auto');
   }
 
   // ---------- Storage ----------
@@ -771,8 +1114,8 @@
     const c1 = bpCategory($('sp1n').value, $('dp1n').value);
     const c2 = bpCategory($('sp2n').value, $('dp2n').value);
 
-    cat1.textContent = `${c1.label}`;
-    cat2.textContent = `${c2.label}`;
+    cat1.textContent = catText(c1.key);
+    cat2.textContent = catText(c2.key);
 
     cat1.style.background = catColor(c1.key);
     cat2.style.background = catColor(c2.key);
@@ -786,6 +1129,7 @@
   const btnTimer = $('btnTimer');
   let timer = null;
   let remain = 60;
+  let isTimerRunning = false;
 
   function renderTimer(){
     const mm = pad2(Math.floor(remain / 60));
@@ -798,7 +1142,8 @@
       clearInterval(timer);
       timer = null;
     }
-    btnTimer.textContent = 'Start';
+    isTimerRunning = false;
+    btnTimer.textContent = t('actions.start');
   }
 
   function startTimer(){
@@ -808,14 +1153,15 @@
     }
     remain = 60;
     renderTimer();
-    btnTimer.textContent = 'Stop';
+    isTimerRunning = true;
+    btnTimer.textContent = t('actions.stop');
     timer = setInterval(() => {
       remain -= 1;
       renderTimer();
       if (remain <= 0){
         stopTimer();
         // gentle nudge
-        btnTimer.textContent = 'Start';
+        btnTimer.textContent = t('actions.start');
         btnTimer.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}],{duration:380});
       }
     }, 1000);
@@ -826,16 +1172,18 @@
   // ---------- Defaults: last 7 day avg or fallback ----------
   const defaultBadge = $('defaultBadge');
   const todayPill = $('todayPill');
+  let defaultMeta = {kind: 'fallback', count: 0};
 
   function applyDefaults(){
     const recs = loadRecords();
     const avg7 = getLastNDaysAvg(recs, 7);
 
     const def = avg7
-      ? {sp:avg7.sp, dp:avg7.dp, hr:avg7.hr, src:`7-day avg (n=${avg7.n})`}
-      : {sp:120, dp:80, hr:80, src:'Default 120/80 HR 80'};
+      ? {sp:avg7.sp, dp:avg7.dp, hr:avg7.hr, src:t('defaults.sevenDay', {count: avg7.n})}
+      : {sp:120, dp:80, hr:80, src:t('defaults.fallback')};
 
-    defaultBadge.textContent = `Defaults: ${def.src}`;
+    defaultMeta = avg7 ? {kind: 'sevenDay', count: avg7.n} : {kind: 'fallback', count: 0};
+    defaultBadge.textContent = t('defaults.prefix', {source: def.src});
 
     sp1.set(def.sp); dp1.set(def.dp); hr1.set(def.hr);
     sp2.set(def.sp); dp2.set(def.dp); hr2.set(def.hr);
@@ -935,14 +1283,14 @@
 
   function renderRecent(){
     const list = sortRecordsDesc(loadRecords());
-    countBadge.textContent = `${list.length} total`;
+    countBadge.textContent = t('recent.count', {count: list.length});
 
     const top = list.slice(0, 10);
     recentList.innerHTML = '';
 
     if (!top.length){
-      recentList.innerHTML = `<div class="notice">No records yet. Add your first entry in <b>Input</b>.</div>`;
-      recentTip.textContent = 'Tip: Take two readings 1 minute apart. Save will store the average.';
+      recentList.innerHTML = `<div class="notice">${t('recent.empty')}</div>`;
+      recentTip.textContent = t('recent.tip');
       return;
     }
 
@@ -955,8 +1303,8 @@
       a.className = 'a';
       a.innerHTML = `
         <div class="mono" style="font-weight:900">
-          ${r.spAvg}/${r.dpAvg} <span style="color:var(--muted); font-weight:700">mmHg</span>
-          <span style="margin-left:8px; color:var(--muted)">HR ${r.hrAvg}</span>
+          ${r.spAvg}/${r.dpAvg} <span style="color:var(--muted); font-weight:700">${t('units.mmhg')}</span>
+          <span style="margin-left:8px; color:var(--muted)">${t('labels.hrShort')} ${r.hrAvg}</span>
         </div>
         <div class="notice mono">
           ${r.date} • ${prettySlot(r.timeSlot)} • ${r.time}
@@ -968,7 +1316,7 @@
       b.className = 'b mono';
       b.innerHTML = `
         <div class="badge" style="background:${catColor(cat.key)}; color:var(--text); font-weight:900">${catText(cat.key)}</div>
-        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">Delete</button></div>
+        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">${t('actions.delete')}</button></div>
       `;
 
       left.appendChild(a);
@@ -976,7 +1324,7 @@
       recentList.appendChild(left);
     }
 
-    recentTip.textContent = 'You can record multiple sessions per day (e.g., morning and evening). 7-day/4-week charts will switch to bars when a day has multiple readings.';
+    recentTip.textContent = t('recent.tip');
 
     // Delete handler
     recentList.querySelectorAll('button[data-del]').forEach(btn => {
@@ -1029,14 +1377,14 @@
         renderRecent();
         refreshReview();
       }catch(err){
-        alert('Import failed: ' + (err?.message || String(err)));
+        alert(t('alerts.importFailed', {message: err?.message || String(err)}));
       }
     };
     inp.click();
   });
 
   $('btnWipe').addEventListener('click', () => {
-    const ok = confirm('Wipe all BP records and medication flags from this browser?');
+    const ok = confirm(t('alerts.wipeConfirm'));
     if (!ok) return;
     localStorage.removeItem(KEY_REC);
     localStorage.removeItem(KEY_MEDS);
@@ -1045,6 +1393,222 @@
     applyDefaults();
     renderRecent();
     refreshReview();
+  });
+
+  // ---------- Google Drive (AppData) ----------
+  const GOOGLE_CLIENT_ID = '332987792434-u7r3hdl46asbqo0si3ngqu46kdbgf2at.apps.googleusercontent.com';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  const DRIVE_FILENAME = 'bp-tracker-data.json';
+  const DRIVE_STAY_SIGNED_IN_KEY = 'bp_drive_stay_signed_in';
+  const driveStatus = $('driveStatus');
+  const btnDriveSignIn = $('btnDriveSignIn');
+  const btnDriveSave = $('btnDriveSave');
+  const driveStaySignedIn = $('driveStaySignedIn');
+  let tokenClient = null;
+  let accessToken = '';
+  let tokenExpiresAt = 0;
+
+  function setDriveStatus(key, connected, vars = {}){
+    driveStatusState.key = key;
+    driveStatusState.connected = connected;
+    driveStatusState.vars = vars;
+    driveStatus.textContent = t(key, vars);
+    btnDriveSave.disabled = !connected;
+  }
+
+  function setStaySignedIn(enabled){
+    driveStaySignedIn.checked = enabled;
+    localStorage.setItem(DRIVE_STAY_SIGNED_IN_KEY, enabled ? '1' : '0');
+  }
+
+  function getStaySignedIn(){
+    return localStorage.getItem(DRIVE_STAY_SIGNED_IN_KEY) === '1';
+  }
+
+  function initDriveAuth(){
+    const waitForGsi = () => {
+      if (window.google?.accounts?.oauth2){
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: DRIVE_SCOPE,
+          callback: () => {},
+        });
+        setDriveStatus('drive.signedOut', false);
+        driveStaySignedIn.checked = getStaySignedIn();
+        if (driveStaySignedIn.checked){
+          setDriveStatus('drive.reconnecting', false);
+          requestDriveToken('').catch(() => {
+            setDriveStatus('drive.signedOut', false);
+          });
+        }
+      } else {
+        setTimeout(waitForGsi, 300);
+      }
+    };
+    waitForGsi();
+  }
+
+  function requestDriveToken(prompt){
+    return new Promise((resolve, reject) => {
+      if (!tokenClient){
+        reject(new Error('Google auth not ready.'));
+        return;
+      }
+      tokenClient.callback = (resp) => {
+        if (resp?.error){
+          reject(new Error(resp.error));
+          return;
+        }
+        accessToken = resp.access_token;
+        tokenExpiresAt = Date.now() + (resp.expires_in ? resp.expires_in * 1000 : 0);
+        setDriveStatus('drive.connected', true);
+        resolve(accessToken);
+      };
+      tokenClient.requestAccessToken({prompt});
+    });
+  }
+
+  async function ensureDriveToken(){
+    if (accessToken && (!tokenExpiresAt || Date.now() < tokenExpiresAt - 10000)){
+      return accessToken;
+    }
+    const prompt = accessToken ? '' : 'consent';
+    return requestDriveToken(prompt);
+  }
+
+  async function findDriveFileId(){
+    const q = `name='${DRIVE_FILENAME}' and 'appDataFolder' in parents and trashed=false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name,modifiedTime)`;
+    const res = await fetch(url, {
+      headers: {Authorization: `Bearer ${accessToken}`}
+    });
+    if (!res.ok){
+      throw new Error(t('alerts.driveListFailed'));
+    }
+    const data = await res.json();
+    return data.files?.[0]?.id || '';
+  }
+
+  async function fetchDrivePayload(fileId){
+    if (!fileId) return null;
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const res = await fetch(url, {
+      headers: {Authorization: `Bearer ${accessToken}`}
+    });
+    if (!res.ok){
+      throw new Error(t('alerts.driveDownloadFailed'));
+    }
+    return res.json();
+  }
+
+  function mergeDriveData(localPayload, remotePayload){
+    const remote = remotePayload && typeof remotePayload === 'object' ? remotePayload : {};
+    const mergedRecords = [];
+    const seen = new Set();
+    const addRecord = (r) => {
+      if (!r || typeof r !== 'object') return;
+      const key = r.id || `${r.date}-${r.time}-${r.timeSlot}-${r.spAvg}-${r.dpAvg}-${r.hrAvg}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      mergedRecords.push(r);
+    };
+    (remote.records || []).forEach(addRecord);
+    (localPayload.records || []).forEach(addRecord);
+
+    const mergedMeds = {...(remote.meds || {})};
+    for (const [date, value] of Object.entries(localPayload.meds || {})){
+      if (value) mergedMeds[date] = true;
+      else if (mergedMeds[date] === undefined) mergedMeds[date] = value;
+    }
+
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      records: mergedRecords,
+      meds: mergedMeds,
+    };
+  }
+
+  async function uploadToDrive(payload){
+    const metadata = {
+      name: DRIVE_FILENAME,
+      parents: ['appDataFolder'],
+      mimeType: 'application/json',
+    };
+    const boundary = '-------bpTrackerDriveBoundary';
+    const body = [
+      `--${boundary}`,
+      'Content-Type: application/json; charset=UTF-8',
+      '',
+      JSON.stringify(metadata),
+      `--${boundary}`,
+      'Content-Type: application/json',
+      '',
+      JSON.stringify(payload),
+      `--${boundary}--`,
+      ''
+    ].join('\r\n');
+
+    const fileId = await findDriveFileId();
+    const url = fileId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    const method = fileId ? 'PATCH' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body
+    });
+    if (!res.ok){
+      throw new Error(t('alerts.driveUploadFailed'));
+    }
+    return res.json();
+  }
+
+  btnDriveSignIn.addEventListener('click', async () => {
+    try{
+      await requestDriveToken('consent');
+      if (driveStaySignedIn.checked){
+        setStaySignedIn(true);
+      }
+    }catch(err){
+      alert(t('alerts.signInFailed', {message: err?.message || String(err)}));
+    }
+  });
+
+  driveStaySignedIn.addEventListener('change', () => {
+    setStaySignedIn(driveStaySignedIn.checked);
+    if (driveStaySignedIn.checked && !accessToken && tokenClient){
+      setDriveStatus('drive.reconnecting', false);
+      requestDriveToken('').catch(() => {
+        setDriveStatus('drive.signedOut', false);
+      });
+    }
+  });
+
+  btnDriveSave.addEventListener('click', async () => {
+    try{
+      await ensureDriveToken();
+      const localPayload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        records: loadRecords(),
+        meds: loadMeds(),
+      };
+      setDriveStatus('drive.saving', true);
+      const fileId = await findDriveFileId();
+      const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
+      const mergedPayload = mergeDriveData(localPayload, remotePayload);
+      await uploadToDrive(mergedPayload);
+      setDriveStatus('drive.saved', true);
+    }catch(err){
+      setDriveStatus('drive.signedOut', false);
+      alert(t('alerts.driveSaveFailed', {message: err?.message || String(err)}));
+    }
   });
 
   // ---------- Review ----------
@@ -1276,8 +1840,8 @@
     const byDate = groupByDate(inRange);
 
     // badge + note
-    const title = mode==='1d' ? '1 day' : mode==='7d' ? '7 days' : '4 weeks';
-    reviewRangeBadge.textContent = `${title} ending ${endStr}`;
+    const title = mode==='1d' ? t('review.mode1d') : mode==='7d' ? t('review.mode7d') : t('review.mode4w');
+    reviewRangeBadge.textContent = t('review.rangeBadge', {range: title, date: endStr});
 
     // list
     renderRangeList(dayKeys, byDate);
@@ -1292,16 +1856,16 @@
     // stats
     const n = inRange.length;
     if (!n){
-      statsPill.textContent = 'No data in range';
-      reviewNote.textContent = 'Add entries in Input, then come back here.';
+      statsPill.textContent = t('review.noData');
+      reviewNote.textContent = t('review.addEntries');
       return;
     }
 
     const spAvg = Math.round(inRange.reduce((s,r)=>s+r.spAvg,0)/n);
     const dpAvg = Math.round(inRange.reduce((s,r)=>s+r.dpAvg,0)/n);
     const cat = bpCategory(spAvg, dpAvg);
-    statsPill.textContent = `Avg: ${spAvg}/${dpAvg} • ${catText(cat.key)} (${n} records)`;
-    reviewNote.textContent = 'Bars = multiple readings in one day (min→max). Points = single reading in a day.';
+    statsPill.textContent = t('review.avgStats', {sp: spAvg, dp: dpAvg, cat: catText(cat.key), count: n});
+    reviewNote.textContent = t('review.note');
   }
 
   function renderRangeList(dayKeys, byDate){
@@ -1327,7 +1891,7 @@
       right.className = 'b mono';
 
       if (!arr.length){
-        right.innerHTML = `<div>—</div><div>no entries</div>`;
+        right.innerHTML = `<div>${t('range.emptyDay')}</div><div>${t('range.noEntries')}</div>`;
       } else {
         any = true;
         const lines = arr
@@ -1345,7 +1909,7 @@
     }
 
     if (!any){
-      rangeList.innerHTML = `<div class="notice">No records in this range.</div>`;
+      rangeList.innerHTML = `<div class="notice">${t('range.noRecords')}</div>`;
     }
   }
 
@@ -1402,14 +1966,14 @@
     }
 
     // Titles
-    text(plot.x, plot.y - 8, `Systolic (left) / Diastolic (right) — ${dateStr}`, 'rgba(233,238,246,.92)', 12, 'left');
+    text(plot.x, plot.y - 8, t('chart.titleOneDay', {date: dateStr}), 'rgba(233,238,246,.92)', 12, 'left');
 
     // Legend
     setLegend([
-      {label:'Systolic (SP) line', color:'rgba(138,180,255,.95)'},
-      {label:'Diastolic (DP) line', color:'rgba(255,196,61,.95)'},
-      {label:'Bands: Normal / Stage 1 / Stage 2 / Stage 3', color:'rgba(255,255,255,.25)'},
-      {label:'Right strip: DP bands', color:'rgba(255,255,255,.25)'}
+      {label: t('legend.spLine'), color:'rgba(138,180,255,.95)'},
+      {label: t('legend.dpLine'), color:'rgba(255,196,61,.95)'},
+      {label: t('legend.bands'), color:'rgba(255,255,255,.25)'},
+      {label: t('legend.dpStrip'), color:'rgba(255,255,255,.25)'}
     ]);
 
     // If no records, show message
@@ -1418,7 +1982,7 @@
       ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('No records for this day.', w/2, h/2);
+      ctx.fillText(t('chart.noRecordsDay'), w/2, h/2);
     }
   }
 
@@ -1552,14 +2116,15 @@
       }
     }
 
-    text(plot.x, plot.y - 8, `BP over time (SP & DP) — ${mode==='7d'?'7 days':'4 weeks'}`, 'rgba(233,238,246,.92)', 12, 'left');
+    const rangeTitle = mode==='7d' ? t('review.mode7d') : t('review.mode4w');
+    text(plot.x, plot.y - 8, t('chart.titleMulti', {range: rangeTitle}), 'rgba(233,238,246,.92)', 12, 'left');
 
     setLegend([
-      {label:'SP (systolic)', color: colorSP},
-      {label:'DP (diastolic)', color: colorDP},
-      {label:'Points: single reading in a day', color:'rgba(255,255,255,.25)'},
-      {label:'Bars: min→max when multiple readings', color:'rgba(255,255,255,.25)'},
-      {label:'💊 medication taken (per day)', color:'rgba(255,255,255,.25)'}
+      {label: t('legend.sp'), color: colorSP},
+      {label: t('legend.dp'), color: colorDP},
+      {label: t('legend.points'), color:'rgba(255,255,255,.25)'},
+      {label: t('legend.bars'), color:'rgba(255,255,255,.25)'},
+      {label: t('legend.meds'), color:'rgba(255,255,255,.25)'}
     ]);
 
     // If empty
@@ -1569,7 +2134,7 @@
       ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('No records in this range.', w/2, h/2);
+      ctx.fillText(t('chart.noRecordsRange'), w/2, h/2);
     }
   }
 
@@ -1594,8 +2159,6 @@
   // ---------- Init ----------
   function init(){
     const today = fmtDate(new Date());
-    todayPill.textContent = `Today: ${today}`;
-
     inputDate.value = today;
     reviewEndDate.value = today;
 
@@ -1607,9 +2170,17 @@
     meds = loadMeds();
     syncMedFromStore();
 
+    initDriveAuth();
+
+    const storedLang = localStorage.getItem('bp_lang');
+    const browserLang = (navigator.language || '').toLowerCase();
+    const initialLang = storedLang || (browserLang.startsWith('zh') ? 'zh' : 'en');
+    setLanguage(initialLang);
+    langButtons.forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
     applyDefaults();
-    renderRecent();
-    refreshReview();
 
     window.addEventListener('resize', () => {
       if (!viewReview.classList.contains('hidden')) refreshReview();
