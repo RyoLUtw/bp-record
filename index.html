@@ -521,6 +521,10 @@
                 <span class="driveStatus" id="driveStatus">Drive: signed out</span>
                 <button class="btn google smallBtn" id="btnDriveSignIn">Sign in to Google Drive</button>
                 <button class="btn secondary smallBtn" id="btnDriveSave" disabled>Save to Drive</button>
+                <label class="notice" style="display:flex; align-items:center; gap:6px">
+                  <input type="checkbox" id="driveStaySignedIn" />
+                  Stay signed in
+                </label>
               </div>
             </div>
 
@@ -1089,9 +1093,11 @@
   const GOOGLE_CLIENT_ID = '332987792434-u7r3hdl46asbqo0si3ngqu46kdbgf2at.apps.googleusercontent.com';
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
   const DRIVE_FILENAME = 'bp-tracker-data.json';
+  const DRIVE_STAY_SIGNED_IN_KEY = 'bp_drive_stay_signed_in';
   const driveStatus = $('driveStatus');
   const btnDriveSignIn = $('btnDriveSignIn');
   const btnDriveSave = $('btnDriveSave');
+  const driveStaySignedIn = $('driveStaySignedIn');
   let tokenClient = null;
   let accessToken = '';
   let tokenExpiresAt = 0;
@@ -1099,6 +1105,15 @@
   function setDriveStatus(text, connected){
     driveStatus.textContent = text;
     btnDriveSave.disabled = !connected;
+  }
+
+  function setStaySignedIn(enabled){
+    driveStaySignedIn.checked = enabled;
+    localStorage.setItem(DRIVE_STAY_SIGNED_IN_KEY, enabled ? '1' : '0');
+  }
+
+  function getStaySignedIn(){
+    return localStorage.getItem(DRIVE_STAY_SIGNED_IN_KEY) === '1';
   }
 
   function initDriveAuth(){
@@ -1110,6 +1125,13 @@
           callback: () => {},
         });
         setDriveStatus('Drive: signed out', false);
+        driveStaySignedIn.checked = getStaySignedIn();
+        if (driveStaySignedIn.checked){
+          setDriveStatus('Drive: reconnecting...', false);
+          requestDriveToken('').catch(() => {
+            setDriveStatus('Drive: signed out', false);
+          });
+        }
       } else {
         setTimeout(waitForGsi, 300);
       }
@@ -1158,6 +1180,46 @@
     return data.files?.[0]?.id || '';
   }
 
+  async function fetchDrivePayload(fileId){
+    if (!fileId) return null;
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const res = await fetch(url, {
+      headers: {Authorization: `Bearer ${accessToken}`}
+    });
+    if (!res.ok){
+      throw new Error('Drive download failed.');
+    }
+    return res.json();
+  }
+
+  function mergeDriveData(localPayload, remotePayload){
+    const remote = remotePayload && typeof remotePayload === 'object' ? remotePayload : {};
+    const mergedRecords = [];
+    const seen = new Set();
+    const addRecord = (r) => {
+      if (!r || typeof r !== 'object') return;
+      const key = r.id || `${r.date}-${r.time}-${r.timeSlot}-${r.spAvg}-${r.dpAvg}-${r.hrAvg}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      mergedRecords.push(r);
+    };
+    (remote.records || []).forEach(addRecord);
+    (localPayload.records || []).forEach(addRecord);
+
+    const mergedMeds = {...(remote.meds || {})};
+    for (const [date, value] of Object.entries(localPayload.meds || {})){
+      if (value) mergedMeds[date] = true;
+      else if (mergedMeds[date] === undefined) mergedMeds[date] = value;
+    }
+
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      records: mergedRecords,
+      meds: mergedMeds,
+    };
+  }
+
   async function uploadToDrive(payload){
     const metadata = {
       name: DRIVE_FILENAME,
@@ -1201,22 +1263,38 @@
   btnDriveSignIn.addEventListener('click', async () => {
     try{
       await requestDriveToken('consent');
+      if (driveStaySignedIn.checked){
+        setStaySignedIn(true);
+      }
     }catch(err){
       alert('Google sign-in failed: ' + (err?.message || String(err)));
+    }
+  });
+
+  driveStaySignedIn.addEventListener('change', () => {
+    setStaySignedIn(driveStaySignedIn.checked);
+    if (driveStaySignedIn.checked && !accessToken && tokenClient){
+      setDriveStatus('Drive: reconnecting...', false);
+      requestDriveToken('').catch(() => {
+        setDriveStatus('Drive: signed out', false);
+      });
     }
   });
 
   btnDriveSave.addEventListener('click', async () => {
     try{
       await ensureDriveToken();
-      const payload = {
+      const localPayload = {
         version: 1,
         exportedAt: new Date().toISOString(),
         records: loadRecords(),
         meds: loadMeds(),
       };
       setDriveStatus('Drive: saving...', true);
-      await uploadToDrive(payload);
+      const fileId = await findDriveFileId();
+      const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
+      const mergedPayload = mergeDriveData(localPayload, remotePayload);
+      await uploadToDrive(mergedPayload);
       setDriveStatus('Drive: saved to AppData', true);
     }catch(err){
       setDriveStatus('Drive: signed out', false);
