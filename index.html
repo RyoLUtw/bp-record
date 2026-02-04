@@ -90,6 +90,12 @@
       padding:0;
     }
 
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
     /* Slide switch tabs */
     .tabs{
       width:100%;
@@ -291,6 +297,16 @@
     .item .a{display:flex; flex-direction:column; gap:4px}
     .item .b{text-align:right; color:var(--muted); font-size:12px}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
+
+    .flash{
+      animation: flashPulse 0.6s ease-in-out 3;
+    }
+
+    @keyframes flashPulse{
+      0%{background: rgba(138,180,255,.08);}
+      50%{background: rgba(138,180,255,.28);}
+      100%{background: rgba(138,180,255,.08);}
+    }
 
     .sep{height:1px; background: var(--line); margin:12px 0}
 
@@ -559,9 +575,35 @@
                   <button class="btn" id="btnSave" data-i18n="actions.saveAveraged">Save averaged record</button>
                 </div>
               </div>
+            </div>
 
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="hd">
+              <div>
+                <h2 data-i18n="recent.title">Recent records</h2>
+                <div class="hint" data-i18n="recent.hint">Latest 10 averaged entries</div>
+              </div>
+              <div class="badge mono" id="countBadge"></div>
+            </div>
+            <div class="bd">
+              <div class="list" id="recentList"></div>
               <div class="sep"></div>
+            </div>
+          </div>
 
+          <div class="card" id="dataCard">
+            <div class="hd">
+              <div>
+                <h2 data-i18n="data.title">Data Management</h2>
+                <div class="hint" data-i18n="data.hint">Backup, import, and local storage tools</div>
+              </div>
+              <button class="btn secondary smallBtn" id="btnDataToggle" aria-expanded="true" data-i18n="data.collapse">Collapse</button>
+            </div>
+            <div class="bd" id="dataBody">
               <div class="row" style="justify-content:space-between">
                 <div class="notice" data-i18n-html="notices.localStorage">
                   Data is stored locally in your browser via <code>localStorage</code>.
@@ -591,21 +633,6 @@
                 </div>
               </div>
             </div>
-
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd">
-            <div>
-              <h2 data-i18n="recent.title">Recent records</h2>
-              <div class="hint" data-i18n="recent.hint">Latest 10 averaged entries</div>
-            </div>
-            <div class="badge mono" id="countBadge"></div>
-          </div>
-          <div class="bd">
-            <div class="list" id="recentList"></div>
-            <div class="sep"></div>
           </div>
         </div>
 
@@ -741,6 +768,10 @@
       'drive.signOut': 'Sign out',
       'drive.save': 'Save to Drive',
       'drive.staySignedIn': 'Stay signed in',
+      'data.title': 'Data Management',
+      'data.hint': 'Backup, import, and local storage tools',
+      'data.collapse': 'Collapse',
+      'data.expand': 'Expand',
       'recent.title': 'Recent records',
       'recent.hint': 'Latest 10 averaged entries',
       'recent.count': '{count} total',
@@ -851,6 +882,10 @@
       'drive.signOut': '登出',
       'drive.save': '存到 Drive',
       'drive.staySignedIn': '保持登入',
+      'data.title': '資料管理',
+      'data.hint': '備份、匯入與本機儲存工具',
+      'data.collapse': '收合',
+      'data.expand': '展開',
       'recent.title': '最近紀錄',
       'recent.hint': '最新 10 筆平均資料',
       'recent.count': '{count} 筆',
@@ -954,6 +989,7 @@
     }
     renderRecent();
     refreshReview();
+    updateDataToggleLabel();
   }
 
   // Categories (4 bands requested: normal, stage1, stage2, stage3)
@@ -997,6 +1033,7 @@
   // ---------- Storage ----------
   const KEY_REC = 'bp_records_v1';
   const KEY_MEDS = 'bp_meds_v1';
+  const KEY_DATA_COLLAPSE = 'bp_data_collapsed';
 
   function loadRecords(){
     try { return JSON.parse(localStorage.getItem(KEY_REC) || '[]'); }
@@ -1212,8 +1249,11 @@
   const todayPill = $('todayPill');
   const inputPanel = $('inputPanel');
   const btnAddMeasurement = $('btnAddMeasurement');
+  const dataBody = $('dataBody');
+  const btnDataToggle = $('btnDataToggle');
   let defaultMeta = {kind: 'fallback', count: 0};
   let inputPanelVisible = false;
+  let dataCollapsed = false;
 
   function hasRecordForDate(dateStr){
     return loadRecords().some((rec) => rec.date === dateStr);
@@ -1240,6 +1280,21 @@
     ensureMedDefaultForDate(dateStr);
     applyDefaults();
     setInputPanelVisible(true);
+  }
+
+  function updateDataToggleLabel(){
+    if (!btnDataToggle) return;
+    btnDataToggle.textContent = t(dataCollapsed ? 'data.expand' : 'data.collapse');
+    btnDataToggle.setAttribute('aria-expanded', dataCollapsed ? 'false' : 'true');
+  }
+
+  function setDataCollapsed(collapsed){
+    dataCollapsed = collapsed;
+    if (dataBody){
+      dataBody.classList.toggle('hidden', collapsed);
+    }
+    updateDataToggleLabel();
+    localStorage.setItem(KEY_DATA_COLLAPSE, collapsed ? '1' : '0');
   }
 
   function applyDefaults(){
@@ -1336,6 +1391,9 @@
     renderRecent();
     refreshReview();
     setInputPanelVisible(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => highlightRecentRecord(rec.id));
+    });
 
     // Tiny feedback
     btnSave.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:260});
@@ -1370,6 +1428,7 @@
       const cat = bpCategory(r.spAvg, r.dpAvg);
       const left = document.createElement('div');
       left.className = 'item';
+      left.dataset.recId = r.id;
 
       const a = document.createElement('div');
       a.className = 'a';
@@ -1406,6 +1465,19 @@
         refreshReview();
       });
     });
+  }
+
+  function highlightRecentRecord(recordId){
+    if (!recordId) return;
+    const target = recentList.querySelector(`[data-rec-id="${recordId}"]`);
+    if (!target) return;
+    target.classList.remove('flash');
+    void target.offsetWidth;
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    target.classList.add('flash');
+    target.addEventListener('animationend', () => {
+      target.classList.remove('flash');
+    }, {once:true});
   }
 
   // ---------- Export/Import/Wipe ----------
@@ -2264,6 +2336,14 @@
 
     setInputPanelVisible(false);
     applyDefaults();
+    dataCollapsed = localStorage.getItem(KEY_DATA_COLLAPSE) === '1';
+    if (dataBody){
+      dataBody.classList.toggle('hidden', dataCollapsed);
+    }
+    if (btnDataToggle){
+      btnDataToggle.addEventListener('click', () => setDataCollapsed(!dataCollapsed));
+    }
+    updateDataToggleLabel();
 
     window.addEventListener('resize', () => {
       if (!viewReview.classList.contains('hidden')) refreshReview();
