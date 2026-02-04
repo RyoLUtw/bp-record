@@ -188,11 +188,16 @@
       color:var(--text);
       border-radius:10px;
       padding:6px 8px;
+      margin-right:6px;
       font-weight:700;
       outline:none;
     }
 
     input[type=range]{width: 100%}
+
+    input[type=date]::-webkit-calendar-picker-indicator{
+      filter: invert(1);
+    }
 
     .triple{
       display:grid;
@@ -405,7 +410,6 @@
               <div class="hint" data-i18n="input.hint">Defaults to last 7-day averages (or 120/80 HR 80)</div>
             </div>
             <div class="rightStrip">
-              <div class="badge" id="defaultBadge"></div>
               <button
                 class="btn secondary addMeasureBtn"
                 id="btnAddMeasurement"
@@ -578,8 +582,9 @@
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
                   <span class="driveStatus" id="driveStatus" data-i18n="drive.signedOut">Drive: signed out</span>
                   <button class="btn google smallBtn" id="btnDriveSignIn" data-i18n="drive.signIn">Sign in to Google Drive</button>
+                  <button class="btn secondary smallBtn hidden" id="btnDriveSignOut" data-i18n="drive.signOut">Sign out</button>
                   <button class="btn secondary smallBtn" id="btnDriveSave" disabled data-i18n="drive.save">Save to Drive</button>
-                  <label class="notice" style="display:flex; align-items:center; gap:6px">
+                  <label class="notice" id="driveStayWrap" style="display:flex; align-items:center; gap:6px">
                     <input type="checkbox" id="driveStaySignedIn" />
                     <span data-i18n="drive.staySignedIn">Stay signed in</span>
                   </label>
@@ -601,7 +606,6 @@
           <div class="bd">
             <div class="list" id="recentList"></div>
             <div class="sep"></div>
-            <div class="notice" id="recentTip"></div>
           </div>
         </div>
 
@@ -734,6 +738,7 @@
       'drive.saving': 'Drive: saving...',
       'drive.saved': 'Drive: saved to AppData',
       'drive.signIn': 'Sign in to Google Drive',
+      'drive.signOut': 'Sign out',
       'drive.save': 'Save to Drive',
       'drive.staySignedIn': 'Stay signed in',
       'recent.title': 'Recent records',
@@ -843,6 +848,7 @@
       'drive.saving': 'Drive：儲存中...',
       'drive.saved': 'Drive：已存到 AppData',
       'drive.signIn': '登入 Google Drive',
+      'drive.signOut': '登出',
       'drive.save': '存到 Drive',
       'drive.staySignedIn': '保持登入',
       'recent.title': '最近紀錄',
@@ -940,7 +946,7 @@
     }
     btnTimer.textContent = isTimerRunning ? t('actions.stop') : t('actions.start');
     todayPill.textContent = t('today.label', {date: fmtDate(new Date())});
-    if (defaultMeta){
+    if (defaultMeta && defaultBadge){
       const source = defaultMeta.kind === 'sevenDay'
         ? t('defaults.sevenDay', {count: defaultMeta.count})
         : t('defaults.fallback');
@@ -1245,7 +1251,9 @@
       : {sp:120, dp:80, hr:80, src:t('defaults.fallback')};
 
     defaultMeta = avg7 ? {kind: 'sevenDay', count: avg7.n} : {kind: 'fallback', count: 0};
-    defaultBadge.textContent = t('defaults.prefix', {source: def.src});
+    if (defaultBadge){
+      defaultBadge.textContent = t('defaults.prefix', {source: def.src});
+    }
 
     sp1.set(def.sp); dp1.set(def.dp); hr1.set(def.hr);
     sp2.set(def.sp); dp2.set(def.dp); hr2.set(def.hr);
@@ -1341,7 +1349,6 @@
   // ---------- Recent list ----------
   const recentList = $('recentList');
   const countBadge = $('countBadge');
-  const recentTip = $('recentTip');
 
   function medEmoji(date){
     return meds[date] ? '💊' : '';
@@ -1356,7 +1363,6 @@
 
     if (!top.length){
       recentList.innerHTML = `<div class="notice">${t('recent.empty')}</div>`;
-      recentTip.textContent = t('recent.tip');
       return;
     }
 
@@ -1389,8 +1395,6 @@
       left.appendChild(b);
       recentList.appendChild(left);
     }
-
-    recentTip.textContent = t('recent.tip');
 
     // Delete handler
     recentList.querySelectorAll('button[data-del]').forEach(btn => {
@@ -1468,8 +1472,10 @@
   const DRIVE_STAY_SIGNED_IN_KEY = 'bp_drive_stay_signed_in';
   const driveStatus = $('driveStatus');
   const btnDriveSignIn = $('btnDriveSignIn');
+  const btnDriveSignOut = $('btnDriveSignOut');
   const btnDriveSave = $('btnDriveSave');
   const driveStaySignedIn = $('driveStaySignedIn');
+  const driveStayWrap = $('driveStayWrap');
   let tokenClient = null;
   let accessToken = '';
   let tokenExpiresAt = 0;
@@ -1480,6 +1486,9 @@
     driveStatusState.vars = vars;
     driveStatus.textContent = t(key, vars);
     btnDriveSave.disabled = !connected;
+    btnDriveSignIn.classList.toggle('hidden', connected);
+    driveStayWrap.classList.toggle('hidden', connected);
+    btnDriveSignOut.classList.toggle('hidden', !connected);
   }
 
   function setStaySignedIn(enabled){
@@ -1644,6 +1653,13 @@
     }catch(err){
       alert(t('alerts.signInFailed', {message: err?.message || String(err)}));
     }
+  });
+
+  btnDriveSignOut.addEventListener('click', () => {
+    accessToken = '';
+    tokenExpiresAt = 0;
+    setStaySignedIn(false);
+    setDriveStatus('drive.signedOut', false);
   });
 
   driveStaySignedIn.addEventListener('change', () => {
