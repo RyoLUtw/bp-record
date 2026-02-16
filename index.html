@@ -24,6 +24,9 @@
       --button-scale: 1;
       --scale-slider-margin-top: 12px;
       --scale-slider-margin-bottom: 12px;
+      --vitals-slider-height: 24px;
+      --adjust-btn-width: 28px;
+      --adjust-btn-height: 28px;
     }
 
     *{box-sizing:border-box}
@@ -208,8 +211,8 @@
     }
 
     .adjustBtn{
-      width:28px;
-      height:28px;
+      width:var(--adjust-btn-width);
+      height:var(--adjust-btn-height);
       border-radius:8px;
       border:1px solid var(--line);
       background: rgba(255,255,255,.08);
@@ -222,18 +225,22 @@
 
     input[type=number]{
       width:84px;
+      height: var(--adjust-btn-height);
       background: rgba(255,255,255,.06);
       border:1px solid var(--line);
       color:var(--text);
       border-radius:10px;
-      padding:6px 8px;
+      padding:0 8px;
       margin-right:6px;
       font-weight:700;
       outline:none;
       text-align:center;
     }
 
-    input[type=range]{width: 100%}
+    input[type=range]{
+      width: 100%;
+      height: var(--vitals-slider-height);
+    }
 
     input[type=date]::-webkit-calendar-picker-indicator{
       filter: invert(1);
@@ -1748,6 +1755,7 @@
         saveRecords(list2);
         renderRecent();
         refreshReview();
+        saveToDrive({silent:true});
       });
     });
   }
@@ -2033,9 +2041,8 @@
         setDriveStatus('drive.saving', true);
       }
       const fileId = await findDriveFileId();
-      const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
-      const mergedPayload = mergeDriveData(localPayload, remotePayload);
-      await uploadToDrive(mergedPayload, fileId);
+      // Mirror local state to Drive so manual deletions do not reappear after restore.
+      await uploadToDrive(localPayload, fileId);
       if (!silent){
         setDriveStatus('drive.saved', true);
       }
