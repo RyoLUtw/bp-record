@@ -187,6 +187,25 @@
       display:flex; align-items:center; gap:8px;
     }
 
+    .numControl{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .adjustBtn{
+      width:28px;
+      height:28px;
+      border-radius:8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      color:var(--text);
+      font-weight:800;
+      cursor:pointer;
+      line-height:1;
+      padding:0;
+    }
+
     input[type=number]{
       width:84px;
       background: rgba(255,255,255,.06);
@@ -485,7 +504,11 @@
                     <div>
                       <label data-i18n="labels.systolic">Systolic (SP)</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="sp1n" data-adjust-dir="-1" aria-label="Decrease systolic">−</button>
+                          <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="sp1n" data-adjust-dir="1" aria-label="Increase systolic">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
                       <input type="range" id="sp1r" min="100" max="200" step="1" />
@@ -494,7 +517,11 @@
                     <div>
                       <label data-i18n="labels.diastolic">Diastolic (DP)</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="dp1n" data-adjust-dir="-1" aria-label="Decrease diastolic">−</button>
+                          <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="dp1n" data-adjust-dir="1" aria-label="Increase diastolic">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
                       <input type="range" id="dp1r" min="60" max="160" step="1" />
@@ -503,7 +530,11 @@
                     <div>
                       <label data-i18n="labels.heartRate">Heart rate</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="hr1n" data-adjust-dir="-1" aria-label="Decrease heart rate">−</button>
+                          <input class="mono" type="number" id="hr1n" min="60" max="130" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="hr1n" data-adjust-dir="1" aria-label="Increase heart rate">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                       </div>
                       <input type="range" id="hr1r" min="60" max="130" step="1" />
@@ -539,7 +570,11 @@
                     <div>
                       <label data-i18n="labels.systolic">Systolic (SP)</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="sp2n" data-adjust-dir="-1" aria-label="Decrease systolic">−</button>
+                          <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="sp2n" data-adjust-dir="1" aria-label="Increase systolic">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
                       <input type="range" id="sp2r" min="100" max="200" step="1" />
@@ -548,7 +583,11 @@
                     <div>
                       <label data-i18n="labels.diastolic">Diastolic (DP)</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="dp2n" data-adjust-dir="-1" aria-label="Decrease diastolic">−</button>
+                          <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="dp2n" data-adjust-dir="1" aria-label="Increase diastolic">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
                       <input type="range" id="dp2r" min="60" max="160" step="1" />
@@ -557,7 +596,11 @@
                     <div>
                       <label data-i18n="labels.heartRate">Heart rate</label>
                       <div class="valbox">
-                        <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
+                        <div class="numControl">
+                          <button class="adjustBtn" type="button" data-adjust-target="hr2n" data-adjust-dir="-1" aria-label="Decrease heart rate">−</button>
+                          <input class="mono" type="number" id="hr2n" min="60" max="130" step="1" />
+                          <button class="adjustBtn" type="button" data-adjust-target="hr2n" data-adjust-dir="1" aria-label="Increase heart rate">+</button>
+                        </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                       </div>
                       <input type="range" id="hr2r" min="60" max="130" step="1" />
@@ -1168,10 +1211,23 @@
       onChange && onChange();
     };
 
-    rangeEl.addEventListener('input', () => syncTo(rangeEl.value));
-    numEl.addEventListener('input', () => syncTo(numEl.value));
+    const syncNumToRange = () => {
+      const raw = numEl.value.trim();
+      if (!raw || Number.isNaN(Number(raw))) return;
+      syncTo(raw);
+    };
 
-    return {set: syncTo};
+    rangeEl.addEventListener('input', () => syncTo(rangeEl.value));
+    numEl.addEventListener('input', () => onChange && onChange());
+    numEl.addEventListener('change', syncNumToRange);
+    numEl.addEventListener('blur', syncNumToRange);
+    numEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        syncNumToRange();
+      }
+    });
+
+    return {set: syncTo, syncNumToRange};
   }
 
   // Inputs
@@ -1184,6 +1240,22 @@
 
   const cat1 = $('cat1');
   const cat2 = $('cat2');
+
+  document.querySelectorAll('[data-adjust-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const numEl = $(btn.dataset.adjustTarget);
+      if (!numEl) return;
+      const step = Number(numEl.step || 1) || 1;
+      const dir = Number(btn.dataset.adjustDir || 0);
+      const min = Number(numEl.min);
+      const max = Number(numEl.max);
+      const current = Number(numEl.value);
+      const base = Number.isFinite(current) ? current : min;
+      const next = clamp(base + (dir * step), min, max);
+      numEl.value = String(next);
+      numEl.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+  });
 
   function updateCats(){
     const c1 = bpCategory($('sp1n').value, $('dp1n').value);
@@ -1676,12 +1748,17 @@
     };
   }
 
-  async function uploadToDrive(payload){
-    const metadata = {
-      name: DRIVE_FILENAME,
-      parents: ['appDataFolder'],
-      mimeType: 'application/json',
-    };
+  async function uploadToDrive(payload, fileId = ''){
+    const metadata = fileId
+      ? {
+          name: DRIVE_FILENAME,
+          mimeType: 'application/json',
+        }
+      : {
+          name: DRIVE_FILENAME,
+          parents: ['appDataFolder'],
+          mimeType: 'application/json',
+        };
     const boundary = '-------bpTrackerDriveBoundary';
     const body = [
       `--${boundary}`,
@@ -1696,7 +1773,6 @@
       ''
     ].join('\r\n');
 
-    const fileId = await findDriveFileId();
     const url = fileId
       ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
       : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
@@ -1757,7 +1833,7 @@
       const fileId = await findDriveFileId();
       const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
       const mergedPayload = mergeDriveData(localPayload, remotePayload);
-      await uploadToDrive(mergedPayload);
+      await uploadToDrive(mergedPayload, fileId);
       setDriveStatus('drive.saved', true);
     }catch(err){
       setDriveStatus('drive.signedOut', false);
