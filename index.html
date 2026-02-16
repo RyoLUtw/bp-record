@@ -1656,9 +1656,11 @@
         driveStaySignedIn.checked = getStaySignedIn();
         if (driveStaySignedIn.checked){
           setDriveStatus('drive.reconnecting', false);
-          requestDriveToken('').catch(() => {
-            setDriveStatus('drive.signedOut', false);
-          });
+          requestDriveToken('')
+            .then(() => restoreFromDrive({silentNoBackup:true, silentFailure:true}))
+            .catch(() => {
+              setDriveStatus('drive.signedOut', false);
+            });
         }
       } else {
         setTimeout(waitForGsi, 300);
@@ -1748,6 +1750,51 @@
     };
   }
 
+  function applyDrivePayloadToLocal(payload){
+    if (!payload || typeof payload !== 'object'){
+      throw new Error('Invalid backup payload.');
+    }
+    const records = Array.isArray(payload.records) ? payload.records : [];
+    const medsMap = payload.meds && typeof payload.meds === 'object' ? payload.meds : {};
+    saveRecords(records);
+    saveMeds(medsMap);
+    meds = loadMeds();
+    syncMedFromStore();
+    applyDefaults();
+    renderRecent();
+    refreshReview();
+  }
+
+  async function restoreFromDrive(opts = {}){
+    const {silentNoBackup = true, silentFailure = false} = opts;
+    try{
+      await ensureDriveToken();
+      const fileId = await findDriveFileId();
+      if (!fileId){
+        if (!silentNoBackup){
+          alert(t('drive.restoreEmpty'));
+        }
+        return false;
+      }
+
+      const remotePayload = await fetchDrivePayload(fileId);
+      const localPayload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        records: loadRecords(),
+        meds: loadMeds(),
+      };
+      const mergedPayload = mergeDriveData(localPayload, remotePayload);
+      applyDrivePayloadToLocal(mergedPayload);
+      return true;
+    }catch(err){
+      if (!silentFailure){
+        alert(t('drive.restoreFailed', {message: err?.message || String(err)}));
+      }
+      return false;
+    }
+  }
+
   async function uploadToDrive(payload, fileId = ''){
     const metadata = fileId
       ? {
@@ -1798,6 +1845,7 @@
       if (driveStaySignedIn.checked){
         setStaySignedIn(true);
       }
+      await restoreFromDrive({silentNoBackup:true});
     }catch(err){
       alert(t('alerts.signInFailed', {message: err?.message || String(err)}));
     }
@@ -1814,9 +1862,11 @@
     setStaySignedIn(driveStaySignedIn.checked);
     if (driveStaySignedIn.checked && !accessToken && tokenClient){
       setDriveStatus('drive.reconnecting', false);
-      requestDriveToken('').catch(() => {
-        setDriveStatus('drive.signedOut', false);
-      });
+      requestDriveToken('')
+        .then(() => restoreFromDrive({silentNoBackup:true, silentFailure:true}))
+        .catch(() => {
+          setDriveStatus('drive.signedOut', false);
+        });
     }
   });
 
