@@ -1210,41 +1210,47 @@
     return Number.isFinite(n) ? n : 0;
   }
 
-  function storeTextBaseIfNeeded(el){
+  function storeTextBaseIfNeeded(el, currentScale = 1){
     if (!el.dataset.baseFontSize){
-      el.dataset.baseFontSize = String(parsePx(getComputedStyle(el).fontSize));
+      const scaled = parsePx(getComputedStyle(el).fontSize);
+      const base = currentScale > 0 ? (scaled / currentScale) : scaled;
+      el.dataset.baseFontSize = String(base);
     }
   }
 
+  function getTextScaleValue(){
+    return levelToScale(uiScalePrefs.textLevel, TEXT_SCALE_RANGE);
+  }
+
+  function getButtonScaleValue(){
+    return levelToScale(uiScalePrefs.buttonLevel, BUTTON_SCALE_RANGE);
+  }
+
   function applyTextScale(scale){
-    const applyNode = (el) => {
+    const nodes = [document.body, ...document.body.querySelectorAll('*')];
+    nodes.forEach((el) => {
       if (!(el instanceof Element)) return;
-      storeTextBaseIfNeeded(el);
+      storeTextBaseIfNeeded(el, scale);
+    });
+    nodes.forEach((el) => {
+      if (!(el instanceof Element)) return;
       const base = Number(el.dataset.baseFontSize || 0);
       if (base > 0){
         el.style.fontSize = `${base * scale}px`;
       }
-      el.querySelectorAll('*').forEach((child) => {
-        storeTextBaseIfNeeded(child);
-        const childBase = Number(child.dataset.baseFontSize || 0);
-        if (childBase > 0){
-          child.style.fontSize = `${childBase * scale}px`;
-        }
-      });
-    };
-    applyNode(document.body);
+    });
   }
 
   function scaleButtonDimensions(scale){
     document.querySelectorAll('button').forEach((btn) => {
       const cs = getComputedStyle(btn);
-      if (!btn.dataset.basePadTop) btn.dataset.basePadTop = String(parsePx(cs.paddingTop));
-      if (!btn.dataset.basePadRight) btn.dataset.basePadRight = String(parsePx(cs.paddingRight));
-      if (!btn.dataset.basePadBottom) btn.dataset.basePadBottom = String(parsePx(cs.paddingBottom));
-      if (!btn.dataset.basePadLeft) btn.dataset.basePadLeft = String(parsePx(cs.paddingLeft));
-      if (!btn.dataset.baseRadius) btn.dataset.baseRadius = String(parsePx(cs.borderRadius));
-      if (!btn.dataset.baseWidth && cs.width !== 'auto') btn.dataset.baseWidth = String(parsePx(cs.width));
-      if (!btn.dataset.baseHeight && cs.height !== 'auto') btn.dataset.baseHeight = String(parsePx(cs.height));
+      if (!btn.dataset.basePadTop) btn.dataset.basePadTop = String(parsePx(cs.paddingTop) / scale);
+      if (!btn.dataset.basePadRight) btn.dataset.basePadRight = String(parsePx(cs.paddingRight) / scale);
+      if (!btn.dataset.basePadBottom) btn.dataset.basePadBottom = String(parsePx(cs.paddingBottom) / scale);
+      if (!btn.dataset.basePadLeft) btn.dataset.basePadLeft = String(parsePx(cs.paddingLeft) / scale);
+      if (!btn.dataset.baseRadius) btn.dataset.baseRadius = String(parsePx(cs.borderRadius) / scale);
+      if (!btn.dataset.baseWidth && cs.width !== 'auto') btn.dataset.baseWidth = String(parsePx(cs.width) / scale);
+      if (!btn.dataset.baseHeight && cs.height !== 'auto') btn.dataset.baseHeight = String(parsePx(cs.height) / scale);
 
       btn.style.paddingTop = `${Number(btn.dataset.basePadTop || 0) * scale}px`;
       btn.style.paddingRight = `${Number(btn.dataset.basePadRight || 0) * scale}px`;
@@ -1278,8 +1284,8 @@
 
   function applyUiScalePrefs(prefs){
     saveUiScalePrefsLocal(prefs);
-    const textScale = levelToScale(uiScalePrefs.textLevel, TEXT_SCALE_RANGE);
-    const buttonScale = levelToScale(uiScalePrefs.buttonLevel, BUTTON_SCALE_RANGE);
+    const textScale = getTextScaleValue();
+    const buttonScale = getButtonScaleValue();
     document.documentElement.style.setProperty('--text-scale', String(textScale));
     document.documentElement.style.setProperty('--button-scale', String(buttonScale));
     applyTextScale(textScale);
@@ -1306,8 +1312,8 @@
         }
       }
       if (!hasAdded) return;
-      const textScale = levelToScale(uiScalePrefs.textLevel, TEXT_SCALE_RANGE);
-      const buttonScale = levelToScale(uiScalePrefs.buttonLevel, BUTTON_SCALE_RANGE);
+      const textScale = getTextScaleValue();
+      const buttonScale = getButtonScaleValue();
       applyTextScale(textScale);
       scaleButtonDimensions(buttonScale);
     });
