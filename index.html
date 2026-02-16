@@ -22,6 +22,8 @@
       --radius2: 14px;
       --text-scale: 1;
       --button-scale: 1;
+      --scale-slider-margin-top: 12px;
+      --scale-slider-margin-bottom: 12px;
     }
 
     *{box-sizing:border-box}
@@ -421,10 +423,6 @@
 
     .hidden{display:none !important}
 
-    button, .btn, .tabbtn, .langBtn, .adjustBtn, .addMeasureBtn{
-      font-size: calc(1em * var(--button-scale));
-    }
-
     .scaleModal{
       position:fixed;
       inset:0;
@@ -447,7 +445,8 @@
       display:flex;
       flex-direction:column;
       gap:8px;
-      margin:12px 0;
+      margin-top: var(--scale-slider-margin-top);
+      margin-bottom: var(--scale-slider-margin-bottom);
     }
     .scaleRow .meta{
       display:flex;
@@ -1177,13 +1176,73 @@
     localStorage.setItem(KEY_MEDS, JSON.stringify(map));
   }
 
-  const SCALE_LEVELS = [0.88, 0.94, 1, 1.08, 1.16, 1.24];
+  // Global scale controls (easy to tweak extremes)
+  const SCALE_LEVEL_COUNT = 6;
+  const TEXT_SCALE_RANGE = {min: 0.88, max: 1.24};
+  const BUTTON_SCALE_RANGE = {min: 0.88, max: 1.24};
   let uiScalePrefs = {textLevel: 3, buttonLevel: 3};
 
   function sanitizeScaleLevel(v){
     const n = Number(v);
     if (!Number.isFinite(n)) return 3;
-    return clamp(Math.round(n), 1, 6);
+    return clamp(Math.round(n), 1, SCALE_LEVEL_COUNT);
+  }
+
+  function levelToScale(level, range){
+    const safeLevel = sanitizeScaleLevel(level);
+    const progress = (safeLevel - 1) / (SCALE_LEVEL_COUNT - 1);
+    return range.min + ((range.max - range.min) * progress);
+  }
+
+  function parsePx(v){
+    const n = Number.parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function storeTextBaseIfNeeded(el){
+    if (!el.dataset.baseFontSize){
+      el.dataset.baseFontSize = String(parsePx(getComputedStyle(el).fontSize));
+    }
+  }
+
+  function applyTextScale(scale){
+    const applyNode = (el) => {
+      if (!(el instanceof Element)) return;
+      storeTextBaseIfNeeded(el);
+      const base = Number(el.dataset.baseFontSize || 0);
+      if (base > 0){
+        el.style.fontSize = `${base * scale}px`;
+      }
+      el.querySelectorAll('*').forEach((child) => {
+        storeTextBaseIfNeeded(child);
+        const childBase = Number(child.dataset.baseFontSize || 0);
+        if (childBase > 0){
+          child.style.fontSize = `${childBase * scale}px`;
+        }
+      });
+    };
+    applyNode(document.body);
+  }
+
+  function scaleButtonDimensions(scale){
+    document.querySelectorAll('button').forEach((btn) => {
+      const cs = getComputedStyle(btn);
+      if (!btn.dataset.basePadTop) btn.dataset.basePadTop = String(parsePx(cs.paddingTop));
+      if (!btn.dataset.basePadRight) btn.dataset.basePadRight = String(parsePx(cs.paddingRight));
+      if (!btn.dataset.basePadBottom) btn.dataset.basePadBottom = String(parsePx(cs.paddingBottom));
+      if (!btn.dataset.basePadLeft) btn.dataset.basePadLeft = String(parsePx(cs.paddingLeft));
+      if (!btn.dataset.baseRadius) btn.dataset.baseRadius = String(parsePx(cs.borderRadius));
+      if (!btn.dataset.baseWidth && cs.width !== 'auto') btn.dataset.baseWidth = String(parsePx(cs.width));
+      if (!btn.dataset.baseHeight && cs.height !== 'auto') btn.dataset.baseHeight = String(parsePx(cs.height));
+
+      btn.style.paddingTop = `${Number(btn.dataset.basePadTop || 0) * scale}px`;
+      btn.style.paddingRight = `${Number(btn.dataset.basePadRight || 0) * scale}px`;
+      btn.style.paddingBottom = `${Number(btn.dataset.basePadBottom || 0) * scale}px`;
+      btn.style.paddingLeft = `${Number(btn.dataset.basePadLeft || 0) * scale}px`;
+      btn.style.borderRadius = `${Number(btn.dataset.baseRadius || 0) * scale}px`;
+      if (btn.dataset.baseWidth) btn.style.width = `${Number(btn.dataset.baseWidth) * scale}px`;
+      if (btn.dataset.baseHeight) btn.style.height = `${Number(btn.dataset.baseHeight) * scale}px`;
+    });
   }
 
   function loadUiScalePrefs(){
@@ -1208,17 +1267,40 @@
 
   function applyUiScalePrefs(prefs){
     saveUiScalePrefsLocal(prefs);
-    document.documentElement.style.setProperty('--text-scale', String(SCALE_LEVELS[uiScalePrefs.textLevel - 1]));
-    document.documentElement.style.setProperty('--button-scale', String(SCALE_LEVELS[uiScalePrefs.buttonLevel - 1]));
-    document.documentElement.style.fontSize = `${16 * SCALE_LEVELS[uiScalePrefs.textLevel - 1]}px`;
+    const textScale = levelToScale(uiScalePrefs.textLevel, TEXT_SCALE_RANGE);
+    const buttonScale = levelToScale(uiScalePrefs.buttonLevel, BUTTON_SCALE_RANGE);
+    document.documentElement.style.setProperty('--text-scale', String(textScale));
+    document.documentElement.style.setProperty('--button-scale', String(buttonScale));
+    applyTextScale(textScale);
+    scaleButtonDimensions(buttonScale);
+
     const textSlider = $('scaleTextSlider');
     const btnSlider = $('scaleButtonSlider');
     const textLabel = $('scaleTextLevel');
     const btnLabel = $('scaleButtonLevel');
     if (textSlider) textSlider.value = String(uiScalePrefs.textLevel);
     if (btnSlider) btnSlider.value = String(uiScalePrefs.buttonLevel);
-    if (textLabel) textLabel.textContent = `${uiScalePrefs.textLevel}/6`;
-    if (btnLabel) btnLabel.textContent = `${uiScalePrefs.buttonLevel}/6`;
+    if (textLabel) textLabel.textContent = `${uiScalePrefs.textLevel}/${SCALE_LEVEL_COUNT}`;
+    if (btnLabel) btnLabel.textContent = `${uiScalePrefs.buttonLevel}/${SCALE_LEVEL_COUNT}`;
+  }
+
+
+  function observeScaleForNewNodes(){
+    const obs = new MutationObserver((mutations) => {
+      let hasAdded = false;
+      for (const m of mutations){
+        if (m.addedNodes && m.addedNodes.length){
+          hasAdded = true;
+          break;
+        }
+      }
+      if (!hasAdded) return;
+      const textScale = levelToScale(uiScalePrefs.textLevel, TEXT_SCALE_RANGE);
+      const buttonScale = levelToScale(uiScalePrefs.buttonLevel, BUTTON_SCALE_RANGE);
+      applyTextScale(textScale);
+      scaleButtonDimensions(buttonScale);
+    });
+    obs.observe(document.body, {childList:true, subtree:true});
   }
 
   function sortRecordsDesc(list){
@@ -2644,7 +2726,10 @@
     meds = loadMeds();
     syncMedFromStore();
 
+    $('scaleTextSlider').max = String(SCALE_LEVEL_COUNT);
+    $('scaleButtonSlider').max = String(SCALE_LEVEL_COUNT);
     applyUiScalePrefs(loadUiScalePrefs());
+    observeScaleForNewNodes();
     initDriveAuth();
 
     const storedLang = localStorage.getItem('bp_lang');
