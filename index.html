@@ -20,6 +20,8 @@
       --shadow: 0 12px 30px rgba(0,0,0,.35);
       --radius: 18px;
       --radius2: 14px;
+      --text-scale: 1;
+      --button-scale: 1;
     }
 
     *{box-sizing:border-box}
@@ -51,8 +53,17 @@
 
     .langSwitch{
       display:flex;
-      justify-content:flex-end;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
       margin-bottom:10px;
+    }
+
+    .scaleBtn{
+      font-size:12px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
     }
     .langGroup{
       display:inline-flex;
@@ -185,6 +196,7 @@
 
     .valbox{
       display:flex; align-items:center; gap:8px;
+      justify-content:center;
     }
 
     .numControl{
@@ -216,6 +228,7 @@
       margin-right:6px;
       font-weight:700;
       outline:none;
+      text-align:center;
     }
 
     input[type=range]{width: 100%}
@@ -407,6 +420,42 @@
     }
 
     .hidden{display:none !important}
+
+    button, .btn, .tabbtn, .langBtn, .adjustBtn, .addMeasureBtn{
+      font-size: calc(1em * var(--button-scale));
+    }
+
+    .scaleModal{
+      position:fixed;
+      inset:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.6);
+      padding:16px;
+    }
+    .scaleDialog{
+      width:min(460px, 100%);
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(17,24,36,.95), rgba(15,22,33,.95));
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .scaleRow{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin:12px 0;
+    }
+    .scaleRow .meta{
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+      color:var(--muted);
+    }
+
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -415,6 +464,7 @@
 
     <div class="topbar">
       <div class="langSwitch">
+        <button class="btn secondary scaleBtn" id="btnScale" type="button" data-i18n="actions.scale">UI Scale</button>
         <div class="langGroup" role="group" aria-label="Language">
           <button class="langBtn" type="button" data-lang="en">English</button>
           <button class="langBtn" type="button" data-lang="zh">繁體中文</button>
@@ -431,6 +481,29 @@
       <div class="tabs" role="tablist" aria-label="Tabs">
         <button class="tabbtn active" id="tabInput" role="tab" aria-selected="true" data-i18n="tabs.input">Input</button>
         <button class="tabbtn" id="tabReview" role="tab" aria-selected="false" data-i18n="tabs.review">Review</button>
+      </div>
+    </div>
+
+    <div class="scaleModal hidden" id="scaleModal" role="dialog" aria-modal="true" aria-labelledby="scaleTitle">
+      <div class="scaleDialog">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <strong id="scaleTitle" data-i18n="scale.title">UI Scale</strong>
+          <button class="btn secondary smallBtn" id="btnScaleClose" type="button" data-i18n="actions.close">Close</button>
+        </div>
+        <div class="scaleRow">
+          <div class="meta">
+            <span data-i18n="scale.text">Text size</span>
+            <span class="mono" id="scaleTextLevel">3/6</span>
+          </div>
+          <input type="range" id="scaleTextSlider" min="1" max="6" step="1" value="3" />
+        </div>
+        <div class="scaleRow">
+          <div class="meta">
+            <span data-i18n="scale.buttons">Button size</span>
+            <span class="mono" id="scaleButtonLevel">3/6</span>
+          </div>
+          <input type="range" id="scaleButtonSlider" min="1" max="6" step="1" value="3" />
+        </div>
       </div>
     </div>
 
@@ -792,6 +865,11 @@
       'actions.stop': 'Stop',
       'actions.resetDefaults': 'Reset to defaults',
       'actions.saveAveraged': 'Save averaged record',
+      'actions.scale': 'UI Scale',
+      'actions.close': 'Close',
+      'scale.title': 'UI Scale',
+      'scale.text': 'Text size',
+      'scale.buttons': 'Button size',
       'actions.export': 'Export JSON',
       'actions.import': 'Import JSON',
       'actions.wipe': 'Wipe all data',
@@ -906,6 +984,11 @@
       'actions.stop': '停止',
       'actions.resetDefaults': '重設為預設值',
       'actions.saveAveraged': '儲存平均紀錄',
+      'actions.scale': '介面縮放',
+      'actions.close': '關閉',
+      'scale.title': '介面縮放',
+      'scale.text': '文字大小',
+      'scale.buttons': '按鈕大小',
       'actions.export': '匯出 JSON',
       'actions.import': '匯入 JSON',
       'actions.wipe': '清除所有資料',
@@ -1077,6 +1160,7 @@
   const KEY_REC = 'bp_records_v1';
   const KEY_MEDS = 'bp_meds_v1';
   const KEY_DATA_COLLAPSE = 'bp_data_collapsed';
+  const KEY_UI_SCALE = 'bp_ui_scale_v1';
 
   function loadRecords(){
     try { return JSON.parse(localStorage.getItem(KEY_REC) || '[]'); }
@@ -1091,6 +1175,50 @@
   }
   function saveMeds(map){
     localStorage.setItem(KEY_MEDS, JSON.stringify(map));
+  }
+
+  const SCALE_LEVELS = [0.88, 0.94, 1, 1.08, 1.16, 1.24];
+  let uiScalePrefs = {textLevel: 3, buttonLevel: 3};
+
+  function sanitizeScaleLevel(v){
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 3;
+    return clamp(Math.round(n), 1, 6);
+  }
+
+  function loadUiScalePrefs(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(KEY_UI_SCALE) || '{}');
+      return {
+        textLevel: sanitizeScaleLevel(raw.textLevel),
+        buttonLevel: sanitizeScaleLevel(raw.buttonLevel),
+      };
+    }catch{
+      return {textLevel: 3, buttonLevel: 3};
+    }
+  }
+
+  function saveUiScalePrefsLocal(prefs){
+    uiScalePrefs = {
+      textLevel: sanitizeScaleLevel(prefs.textLevel),
+      buttonLevel: sanitizeScaleLevel(prefs.buttonLevel),
+    };
+    localStorage.setItem(KEY_UI_SCALE, JSON.stringify(uiScalePrefs));
+  }
+
+  function applyUiScalePrefs(prefs){
+    saveUiScalePrefsLocal(prefs);
+    document.documentElement.style.setProperty('--text-scale', String(SCALE_LEVELS[uiScalePrefs.textLevel - 1]));
+    document.documentElement.style.setProperty('--button-scale', String(SCALE_LEVELS[uiScalePrefs.buttonLevel - 1]));
+    document.documentElement.style.fontSize = `${16 * SCALE_LEVELS[uiScalePrefs.textLevel - 1]}px`;
+    const textSlider = $('scaleTextSlider');
+    const btnSlider = $('scaleButtonSlider');
+    const textLabel = $('scaleTextLevel');
+    const btnLabel = $('scaleButtonLevel');
+    if (textSlider) textSlider.value = String(uiScalePrefs.textLevel);
+    if (btnSlider) btnSlider.value = String(uiScalePrefs.buttonLevel);
+    if (textLabel) textLabel.textContent = `${uiScalePrefs.textLevel}/6`;
+    if (btnLabel) btnLabel.textContent = `${uiScalePrefs.buttonLevel}/6`;
   }
 
   function sortRecordsDesc(list){
@@ -1469,6 +1597,9 @@
 
     // Tiny feedback
     btnSave.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:260});
+
+    // Auto backup latest data when Drive is connected.
+    saveToDrive({silent:true});
   }
 
   btnSave.addEventListener('click', saveAveraged);
@@ -1559,6 +1690,7 @@
       exportedAt: new Date().toISOString(),
       records: loadRecords(),
       meds: loadMeds(),
+      uiScale: uiScalePrefs,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -1585,6 +1717,7 @@
         if (!Array.isArray(data.records) || typeof data.meds !== 'object') throw new Error('Wrong schema');
         saveRecords(data.records);
         saveMeds(data.meds);
+        applyUiScalePrefs(data.uiScale || loadUiScalePrefs());
         meds = loadMeds();
         syncMedFromStore();
         applyDefaults();
@@ -1742,11 +1875,15 @@
       else if (mergedMeds[date] === undefined) mergedMeds[date] = value;
     }
 
+    const remoteScale = remote.uiScale && typeof remote.uiScale === 'object' ? remote.uiScale : null;
+    const localScale = localPayload.uiScale && typeof localPayload.uiScale === 'object' ? localPayload.uiScale : null;
+
     return {
       version: 1,
       exportedAt: new Date().toISOString(),
       records: mergedRecords,
       meds: mergedMeds,
+      uiScale: localScale || remoteScale || {textLevel: 3, buttonLevel: 3},
     };
   }
 
@@ -1758,6 +1895,7 @@
     const medsMap = payload.meds && typeof payload.meds === 'object' ? payload.meds : {};
     saveRecords(records);
     saveMeds(medsMap);
+    applyUiScalePrefs(payload.uiScale || loadUiScalePrefs());
     meds = loadMeds();
     syncMedFromStore();
     applyDefaults();
@@ -1778,18 +1916,52 @@
       }
 
       const remotePayload = await fetchDrivePayload(fileId);
-      const localPayload = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        records: loadRecords(),
-        meds: loadMeds(),
-      };
+      const localPayload = buildLocalPayload();
       const mergedPayload = mergeDriveData(localPayload, remotePayload);
+      if (remotePayload?.uiScale && typeof remotePayload.uiScale === 'object'){
+        mergedPayload.uiScale = remotePayload.uiScale;
+      }
       applyDrivePayloadToLocal(mergedPayload);
       return true;
     }catch(err){
       if (!silentFailure){
         alert(t('drive.restoreFailed', {message: err?.message || String(err)}));
+      }
+      return false;
+    }
+  }
+
+  function buildLocalPayload(){
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      records: loadRecords(),
+      meds: loadMeds(),
+      uiScale: uiScalePrefs,
+    };
+  }
+
+  async function saveToDrive(opts = {}){
+    const {silent = false} = opts;
+    if (!accessToken) return false;
+    try{
+      await ensureDriveToken();
+      const localPayload = buildLocalPayload();
+      if (!silent){
+        setDriveStatus('drive.saving', true);
+      }
+      const fileId = await findDriveFileId();
+      const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
+      const mergedPayload = mergeDriveData(localPayload, remotePayload);
+      await uploadToDrive(mergedPayload, fileId);
+      if (!silent){
+        setDriveStatus('drive.saved', true);
+      }
+      return true;
+    }catch(err){
+      if (!silent){
+        setDriveStatus('drive.signedOut', false);
+        alert(t('alerts.driveSaveFailed', {message: err?.message || String(err)}));
       }
       return false;
     }
@@ -1871,24 +2043,7 @@
   });
 
   btnDriveSave.addEventListener('click', async () => {
-    try{
-      await ensureDriveToken();
-      const localPayload = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        records: loadRecords(),
-        meds: loadMeds(),
-      };
-      setDriveStatus('drive.saving', true);
-      const fileId = await findDriveFileId();
-      const remotePayload = fileId ? await fetchDrivePayload(fileId) : null;
-      const mergedPayload = mergeDriveData(localPayload, remotePayload);
-      await uploadToDrive(mergedPayload, fileId);
-      setDriveStatus('drive.saved', true);
-    }catch(err){
-      setDriveStatus('drive.signedOut', false);
-      alert(t('alerts.driveSaveFailed', {message: err?.message || String(err)}));
-    }
+    await saveToDrive({silent:false});
   });
 
   // ---------- Review ----------
@@ -2436,6 +2591,45 @@
     }
   }
 
+  // ---------- UI scale modal ----------
+  const btnScale = $('btnScale');
+  const scaleModal = $('scaleModal');
+  const btnScaleClose = $('btnScaleClose');
+  const scaleTextSlider = $('scaleTextSlider');
+  const scaleButtonSlider = $('scaleButtonSlider');
+
+  function openScaleModal(){
+    scaleModal.classList.remove('hidden');
+  }
+
+  function closeScaleModal(){
+    scaleModal.classList.add('hidden');
+  }
+
+  btnScale.addEventListener('click', openScaleModal);
+  btnScaleClose.addEventListener('click', closeScaleModal);
+  scaleModal.addEventListener('click', (e) => {
+    if (e.target === scaleModal){
+      closeScaleModal();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !scaleModal.classList.contains('hidden')){
+      closeScaleModal();
+    }
+  });
+
+  function handleScaleChange(){
+    applyUiScalePrefs({
+      textLevel: scaleTextSlider.value,
+      buttonLevel: scaleButtonSlider.value,
+    });
+    saveToDrive({silent:true});
+  }
+
+  scaleTextSlider.addEventListener('input', handleScaleChange);
+  scaleButtonSlider.addEventListener('input', handleScaleChange);
+
   // ---------- Init ----------
   function init(){
     const today = fmtDate(new Date());
@@ -2450,6 +2644,7 @@
     meds = loadMeds();
     syncMedFromStore();
 
+    applyUiScalePrefs(loadUiScalePrefs());
     initDriveAuth();
 
     const storedLang = localStorage.getItem('bp_lang');
