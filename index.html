@@ -329,6 +329,35 @@
     .list{
       display:flex; flex-direction:column; gap:10px;
     }
+    .rangeTableWrap{
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      overflow:auto;
+      background: rgba(0,0,0,.12);
+    }
+    .rangeTable{
+      width:100%;
+      border-collapse:collapse;
+      min-width:680px;
+      font-size:12px;
+    }
+    .rangeTable th, .rangeTable td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      white-space:nowrap;
+    }
+    .rangeTable th{
+      color:var(--muted);
+      font-weight:700;
+      background: rgba(255,255,255,.04);
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    .rangeTable tbody tr:last-child td{border-bottom:0}
+    .rangeTable td.center{text-align:center}
+    .vitalsSlider.hidden{display:none}
     .item{
       border:1px solid var(--line);
       background: rgba(0,0,0,.16);
@@ -434,6 +463,34 @@
 
     .hidden{display:none !important}
 
+    .editDialog{
+      width:min(560px, 100%);
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(17,24,36,.95), rgba(15,22,33,.95));
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .editGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    .editGrid .full{grid-column:1 / -1}
+    .editField{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .editActions{
+      margin-top:14px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .scaleModal{
       position:fixed;
       inset:0;
@@ -474,7 +531,7 @@
 
     <div class="topbar">
       <div class="langSwitch">
-        <button class="btn secondary scaleBtn" id="btnScale" type="button" data-i18n="actions.scale">UI Scale</button>
+        <button class="btn secondary scaleBtn" id="btnScale" type="button" data-i18n="actions.scale">UI setting</button>
         <div class="langGroup" role="group" aria-label="Language">
           <button class="langBtn" type="button" data-lang="en">English</button>
           <button class="langBtn" type="button" data-lang="zh">繁體中文</button>
@@ -497,7 +554,7 @@
     <div class="scaleModal hidden" id="scaleModal" role="dialog" aria-modal="true" aria-labelledby="scaleTitle">
       <div class="scaleDialog">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <strong id="scaleTitle" data-i18n="scale.title">UI Scale</strong>
+          <strong id="scaleTitle" data-i18n="scale.title">UI setting</strong>
           <button class="btn secondary smallBtn" id="btnScaleClose" type="button" data-i18n="actions.close">Close</button>
         </div>
         <div class="scaleRow">
@@ -513,6 +570,63 @@
             <span class="mono" id="scaleButtonLevel">3/6</span>
           </div>
           <input type="range" id="scaleButtonSlider" min="1" max="6" step="1" value="3" />
+        </div>
+        <label class="notice" style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+          <input type="checkbox" id="showInputSliders" />
+          <span data-i18n="scale.showInputSliders">Show SP/DP/HR sliders in input</span>
+        </label>
+      </div>
+    </div>
+
+
+    <div class="scaleModal hidden" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="editDialog">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <strong id="editTitle" data-i18n="edit.title">Edit measurement</strong>
+          <button class="btn secondary smallBtn" id="btnEditCancelTop" type="button" data-i18n="actions.cancel">Cancel</button>
+        </div>
+
+        <div class="editGrid">
+          <div class="editField">
+            <label for="editDate" data-i18n="labels.date">Date</label>
+            <input type="date" id="editDate" />
+          </div>
+          <div class="editField">
+            <label for="editTime" data-i18n="labels.time">Time</label>
+            <input type="time" id="editTime" />
+          </div>
+          <div class="editField">
+            <label for="editSlot" data-i18n="review.modeLabel">Mode</label>
+            <select id="editSlot">
+              <option value="morning" data-i18n="timeSlot.morning">Morning</option>
+              <option value="midday" data-i18n="time.midday">Midday</option>
+              <option value="evening" data-i18n="timeSlot.evening">Evening</option>
+              <option value="night" data-i18n="time.night">Night</option>
+              <option value="other" data-i18n="time.other">Other</option>
+            </select>
+          </div>
+          <label class="editField" style="justify-content:flex-end;">
+            <span data-i18n="medication.title">Medication taken today</span>
+            <input type="checkbox" id="editMedTaken" />
+          </label>
+
+          <div class="editField">
+            <label for="editSp" data-i18n="labels.systolic">Systolic (SP)</label>
+            <input class="mono" type="number" id="editSp" min="60" max="200" step="1" />
+          </div>
+          <div class="editField">
+            <label for="editDp" data-i18n="labels.diastolic">Diastolic (DP)</label>
+            <input class="mono" type="number" id="editDp" min="40" max="160" step="1" />
+          </div>
+          <div class="editField full">
+            <label for="editHr" data-i18n="labels.heartRate">Heart rate</label>
+            <input class="mono" type="number" id="editHr" min="60" max="130" step="1" />
+          </div>
+        </div>
+
+        <div class="editActions">
+          <button class="btn secondary" id="btnEditCancel" type="button" data-i18n="actions.cancel">Cancel</button>
+          <button class="btn" id="btnEditConfirm" type="button" data-i18n="actions.confirmChange">Confirm change</button>
         </div>
       </div>
     </div>
@@ -589,12 +703,12 @@
                       <div class="valbox">
                         <div class="numControl">
                           <button class="adjustBtn" type="button" data-adjust-target="sp1n" data-adjust-dir="-1" aria-label="Decrease systolic">−</button>
-                          <input class="mono" type="number" id="sp1n" min="100" max="200" step="1" />
+                          <input class="mono" type="number" id="sp1n" min="60" max="200" step="1" />
                           <button class="adjustBtn" type="button" data-adjust-target="sp1n" data-adjust-dir="1" aria-label="Increase systolic">+</button>
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
-                      <input type="range" id="sp1r" min="100" max="200" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="sp1r" min="60" max="200" step="1" />
                     </div>
 
                     <div>
@@ -602,12 +716,12 @@
                       <div class="valbox">
                         <div class="numControl">
                           <button class="adjustBtn" type="button" data-adjust-target="dp1n" data-adjust-dir="-1" aria-label="Decrease diastolic">−</button>
-                          <input class="mono" type="number" id="dp1n" min="60" max="160" step="1" />
+                          <input class="mono" type="number" id="dp1n" min="40" max="160" step="1" />
                           <button class="adjustBtn" type="button" data-adjust-target="dp1n" data-adjust-dir="1" aria-label="Increase diastolic">+</button>
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
-                      <input type="range" id="dp1r" min="60" max="160" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="dp1r" min="40" max="160" step="1" />
                     </div>
 
                     <div>
@@ -620,7 +734,7 @@
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                       </div>
-                      <input type="range" id="hr1r" min="60" max="130" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="hr1r" min="60" max="130" step="1" />
                     </div>
                   </div>
                 </div>
@@ -655,12 +769,12 @@
                       <div class="valbox">
                         <div class="numControl">
                           <button class="adjustBtn" type="button" data-adjust-target="sp2n" data-adjust-dir="-1" aria-label="Decrease systolic">−</button>
-                          <input class="mono" type="number" id="sp2n" min="100" max="200" step="1" />
+                          <input class="mono" type="number" id="sp2n" min="60" max="200" step="1" />
                           <button class="adjustBtn" type="button" data-adjust-target="sp2n" data-adjust-dir="1" aria-label="Increase systolic">+</button>
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
-                      <input type="range" id="sp2r" min="100" max="200" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="sp2r" min="60" max="200" step="1" />
                     </div>
 
                     <div>
@@ -668,12 +782,12 @@
                       <div class="valbox">
                         <div class="numControl">
                           <button class="adjustBtn" type="button" data-adjust-target="dp2n" data-adjust-dir="-1" aria-label="Decrease diastolic">−</button>
-                          <input class="mono" type="number" id="dp2n" min="60" max="160" step="1" />
+                          <input class="mono" type="number" id="dp2n" min="40" max="160" step="1" />
                           <button class="adjustBtn" type="button" data-adjust-target="dp2n" data-adjust-dir="1" aria-label="Increase diastolic">+</button>
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.mmhg">mmHg</span>
                       </div>
-                      <input type="range" id="dp2r" min="60" max="160" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="dp2r" min="40" max="160" step="1" />
                     </div>
 
                     <div>
@@ -686,7 +800,7 @@
                         </div>
                         <span class="mono" style="color:var(--muted); font-weight:700" data-i18n="units.bpm">bpm</span>
                       </div>
-                      <input type="range" id="hr2r" min="60" max="130" step="1" />
+                      <input class="vitalsSlider hidden" type="range" id="hr2r" min="60" max="130" step="1" />
                     </div>
                   </div>
                 </div>
@@ -816,7 +930,7 @@
             </div>
           </div>
           <div class="bd">
-            <div class="list" id="rangeList"></div>
+            <div class="rangeTableWrap" id="rangeList"></div>
           </div>
         </div>
 
@@ -875,16 +989,21 @@
       'actions.stop': 'Stop',
       'actions.resetDefaults': 'Reset to defaults',
       'actions.saveAveraged': 'Save averaged record',
-      'actions.scale': 'UI Scale',
+      'actions.scale': 'UI setting',
       'actions.close': 'Close',
-      'scale.title': 'UI Scale',
+      'scale.title': 'UI setting',
       'scale.text': 'Text size',
       'scale.buttons': 'Button size',
+      'scale.showInputSliders': 'Show SP/DP/HR sliders in input',
       'actions.export': 'Export JSON',
       'actions.import': 'Import JSON',
       'actions.wipe': 'Wipe all data',
       'actions.refresh': 'Refresh',
+      'actions.edit': 'Edit',
       'actions.delete': 'Delete',
+      'actions.cancel': 'Cancel',
+      'actions.confirmChange': 'Confirm change',
+      'edit.title': 'Edit measurement',
       'actions.addMeasurement': 'Add measurement',
       'defaults.prefix': 'Defaults: {source}',
       'defaults.sevenDay': '7-day avg (n={count})',
@@ -919,12 +1038,18 @@
       'review.noData': 'No data in range',
       'review.addEntries': 'Add entries in Input, then come back here.',
       'review.avgStats': 'Avg: {sp}/{dp} • {cat} ({count} records)',
-      'review.note': 'Bars = multiple readings in one day (min→max). Points = single reading in a day.',
+      'review.note': 'Morning uses triangle, evening uses square. SP uses left axis and DP uses right axis.',
       'range.title': 'Records in range',
-      'range.hint': 'Grouped by date; medication flag shown per day',
+      'range.hint': 'Morning and evening values are shown in table format',
       'range.noEntries': 'no entries',
       'range.noRecords': 'No records in this range.',
       'range.emptyDay': '—',
+      'range.table.date': 'Date',
+      'range.table.morning': 'Morning (SP/DP)',
+      'range.table.morningHr': 'Morning HR',
+      'range.table.evening': 'Evening (SP/DP)',
+      'range.table.eveningHr': 'Evening HR',
+      'range.table.medication': 'Medication',
       'chart.noRecordsDay': 'No records for this day.',
       'chart.noRecordsRange': 'No records in this range.',
       'chart.titleOneDay': 'Systolic (left) / Diastolic (right) — {date}',
@@ -935,8 +1060,8 @@
       'legend.dpStrip': 'Right strip: DP bands',
       'legend.sp': 'SP (systolic)',
       'legend.dp': 'DP (diastolic)',
-      'legend.points': 'Points: single reading in a day',
-      'legend.bars': 'Bars: min→max when multiple readings',
+      'legend.points': 'Markers: morning ▲ / evening ■ (SP and DP)',
+      'legend.bars': 'Single shared y-axis range',
       'legend.meds': '💊 medication taken (per day)',
       'cat.normal': 'Normal',
       'cat.stage1': 'Stage 1',
@@ -994,16 +1119,21 @@
       'actions.stop': '停止',
       'actions.resetDefaults': '重設為預設值',
       'actions.saveAveraged': '儲存平均紀錄',
-      'actions.scale': '介面縮放',
+      'actions.scale': '介面設定',
       'actions.close': '關閉',
-      'scale.title': '介面縮放',
+      'scale.title': '介面設定',
       'scale.text': '文字大小',
       'scale.buttons': '按鈕大小',
+      'scale.showInputSliders': '在輸入頁顯示 SP/DP/HR 滑桿',
       'actions.export': '匯出 JSON',
       'actions.import': '匯入 JSON',
       'actions.wipe': '清除所有資料',
       'actions.refresh': '更新',
+      'actions.edit': '編輯',
       'actions.delete': '刪除',
+      'actions.cancel': '取消',
+      'actions.confirmChange': '確認修改',
+      'edit.title': '編輯量測',
       'actions.addMeasurement': '新增量測',
       'defaults.prefix': '預設值：{source}',
       'defaults.sevenDay': '近 7 天平均（n={count}）',
@@ -1038,12 +1168,18 @@
       'review.noData': '區間內無資料',
       'review.addEntries': '先到「輸入」新增資料，再回來查看。',
       'review.avgStats': '平均：{sp}/{dp} • {cat}（{count} 筆）',
-      'review.note': '柱狀 = 單日多筆（最小→最大），點狀 = 單日一筆。',
+      'review.note': '早上用三角形、晚上用方形。SP 使用左軸，DP 使用右軸。',
       'range.title': '區間內紀錄',
-      'range.hint': '依日期分組；每日用藥狀態會顯示',
+      'range.hint': '以表格顯示早晚量測與服藥狀態',
       'range.noEntries': '無紀錄',
       'range.noRecords': '此區間沒有紀錄。',
       'range.emptyDay': '—',
+      'range.table.date': '日期',
+      'range.table.morning': '早上（SP/DP）',
+      'range.table.morningHr': '早上心跳',
+      'range.table.evening': '晚上（SP/DP）',
+      'range.table.eveningHr': '晚上心跳',
+      'range.table.medication': '服藥',
       'chart.noRecordsDay': '這一天沒有紀錄。',
       'chart.noRecordsRange': '此區間沒有紀錄。',
       'chart.titleOneDay': '收縮壓（左）/ 舒張壓（右）— {date}',
@@ -1054,8 +1190,8 @@
       'legend.dpStrip': '右側色帶：DP 區間',
       'legend.sp': 'SP（收縮壓）',
       'legend.dp': 'DP（舒張壓）',
-      'legend.points': '點狀：單日一筆',
-      'legend.bars': '柱狀：單日多筆（最小→最大）',
+      'legend.points': '標記：早上 ▲／晚上 ■（SP 與 DP）',
+      'legend.bars': '共用單一 y 軸範圍',
       'legend.meds': '💊 當日已服藥',
       'cat.normal': '正常',
       'cat.stage1': '第 1 期',
@@ -1171,6 +1307,7 @@
   const KEY_MEDS = 'bp_meds_v1';
   const KEY_DATA_COLLAPSE = 'bp_data_collapsed';
   const KEY_UI_SCALE = 'bp_ui_scale_v1';
+  const KEY_INPUT_SLIDER_VISIBLE = 'bp_input_slider_visible_v1';
 
   function loadRecords(){
     try { return JSON.parse(localStorage.getItem(KEY_REC) || '[]'); }
@@ -1458,11 +1595,11 @@
   }
 
   // Inputs
-  const sp1 = linkRangeNumber($('sp1r'), $('sp1n'), 100, 200, updateCats);
-  const dp1 = linkRangeNumber($('dp1r'), $('dp1n'), 60, 160, updateCats);
+  const sp1 = linkRangeNumber($('sp1r'), $('sp1n'), 60, 200, updateCats);
+  const dp1 = linkRangeNumber($('dp1r'), $('dp1n'), 40, 160, updateCats);
   const hr1 = linkRangeNumber($('hr1r'), $('hr1n'), 60, 130, updateCats);
-  const sp2 = linkRangeNumber($('sp2r'), $('sp2n'), 100, 200, updateCats);
-  const dp2 = linkRangeNumber($('dp2r'), $('dp2n'), 60, 160, updateCats);
+  const sp2 = linkRangeNumber($('sp2r'), $('sp2n'), 60, 200, updateCats);
+  const dp2 = linkRangeNumber($('dp2r'), $('dp2n'), 40, 160, updateCats);
   const hr2 = linkRangeNumber($('hr2r'), $('hr2n'), 60, 130, updateCats);
 
   const cat1 = $('cat1');
@@ -1627,6 +1764,30 @@
     return chosen;
   }
 
+
+  function resolveAutoDateAndSlot(baseDateStr){
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const hhmm = `${pad2(hour)}:${pad2(minute)}`;
+
+    if (hour < 4){
+      const d = parseDate(baseDateStr);
+      d.setDate(d.getDate() - 1);
+      return {date: fmtDate(d), slot:'evening', time:'23:59'};
+    }
+
+    if (hour < 12){
+      return {date: baseDateStr, slot:'morning', time:hhmm};
+    }
+
+    if (hour < 17){
+      return {date: baseDateStr, slot:'midday', time:hhmm};
+    }
+
+    return {date: baseDateStr, slot:'evening', time:hhmm};
+  }
+
   function nowHHMM(){
     const d = new Date();
     return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -1648,8 +1809,8 @@
     // Basic validation
     const ok = (v, lo, hi) => Number.isFinite(v) && v>=lo && v<=hi;
     const valid =
-      ok(a.sp,100,200) && ok(a.dp,60,160) && ok(a.hr,60,130) &&
-      ok(b.sp,100,200) && ok(b.dp,60,160) && ok(b.hr,60,130);
+      ok(a.sp,60,200) && ok(a.dp,40,160) && ok(a.hr,60,130) &&
+      ok(b.sp,60,200) && ok(b.dp,40,160) && ok(b.hr,60,130);
     if (!valid){
       alert('Please ensure all values are within the allowed ranges.');
       return;
@@ -1660,13 +1821,22 @@
     const hrAvg = Math.round((a.hr + b.hr) / 2);
     const cat = bpCategory(spAvg, dpAvg);
 
-    const date = currentInputDate();
-    const slot = currentSlot();
+    const inputDateStr = currentInputDate();
+    const chosen = timeSlot.value;
+    const resolved = chosen === 'auto'
+      ? resolveAutoDateAndSlot(inputDateStr)
+      : {date: inputDateStr, slot: currentSlot()};
+
+    const date = resolved.date;
+    const slot = resolved.slot;
+    const recordTime = resolved.time || nowHHMM();
+
+    if (!(date in meds)) meds[date] = false;
 
     const rec = {
       id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + Math.random().toString(16).slice(2),
       date,
-      time: nowHHMM(),
+      time: recordTime,
       timeSlot: slot,
       // raw readings
       r1: a,
@@ -1749,13 +1919,18 @@
       b.className = 'b mono';
       b.innerHTML = `
         <div class="badge" style="background:${catColor(cat.key)}; color:var(--text); font-weight:900">${catText(cat.key)}</div>
-        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">${t('actions.delete')}</button></div>
+        <div style="margin-top:6px; display:flex; gap:8px; justify-content:flex-end;"><button class="btn secondary smallBtn" data-edit="${r.id}">${t('actions.edit')}</button><button class="btn secondary smallBtn" data-del="${r.id}">${t('actions.delete')}</button></div>
       `;
 
       left.appendChild(a);
       left.appendChild(b);
       recentList.appendChild(left);
     }
+
+
+    recentList.querySelectorAll('button[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openEditModal(btn.getAttribute('data-edit')));
+    });
 
     // Delete handler
     recentList.querySelectorAll('button[data-del]').forEach(btn => {
@@ -1782,6 +1957,90 @@
       target.classList.remove('flash');
     }, {once:true});
   }
+
+
+  // ---------- Edit modal ----------
+  const editModal = $('editModal');
+  const editDate = $('editDate');
+  const editTime = $('editTime');
+  const editSlot = $('editSlot');
+  const editMedTaken = $('editMedTaken');
+  const editSp = $('editSp');
+  const editDp = $('editDp');
+  const editHr = $('editHr');
+  const btnEditConfirm = $('btnEditConfirm');
+  const btnEditCancel = $('btnEditCancel');
+  const btnEditCancelTop = $('btnEditCancelTop');
+  let editingRecordId = '';
+
+  function closeEditModal(){
+    editModal.classList.add('hidden');
+    editingRecordId = '';
+  }
+
+  function openEditModal(recordId){
+    const rec = loadRecords().find((x) => x.id === recordId);
+    if (!rec) return;
+    editingRecordId = recordId;
+
+    editDate.value = rec.date || fmtDate(new Date());
+    editTime.value = rec.time || '08:00';
+    editSlot.value = rec.timeSlot || 'morning';
+    editSp.value = String(rec.spAvg ?? '');
+    editDp.value = String(rec.dpAvg ?? '');
+    editHr.value = String(rec.hrAvg ?? '');
+    editMedTaken.checked = !!meds[rec.date];
+
+    editModal.classList.remove('hidden');
+  }
+
+  function confirmEdit(){
+    if (!editingRecordId) return;
+    const sp = Number(editSp.value);
+    const dp = Number(editDp.value);
+    const hr = Number(editHr.value);
+    const date = editDate.value || fmtDate(new Date());
+    const time = editTime.value || '00:00';
+    const slot = editSlot.value || 'morning';
+
+    const ok = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi;
+    if (!(ok(sp,60,200) && ok(dp,40,160) && ok(hr,60,130))){
+      alert('Please ensure all values are within the allowed ranges.');
+      return;
+    }
+
+    const records = loadRecords();
+    const idx = records.findIndex((x) => x.id === editingRecordId);
+    if (idx < 0) return;
+
+    const cat = bpCategory(sp, dp);
+    records[idx] = {
+      ...records[idx],
+      date,
+      time,
+      timeSlot: slot,
+      spAvg: sp,
+      dpAvg: dp,
+      hrAvg: hr,
+      category: cat.key,
+      medsTaken: !!editMedTaken.checked,
+    };
+
+    meds[date] = !!editMedTaken.checked;
+    saveMeds(meds);
+    saveRecords(records);
+    closeEditModal();
+    renderRecent();
+    refreshReview();
+    saveToDrive({silent:true});
+  }
+
+  btnEditConfirm.addEventListener('click', confirmEdit);
+  btnEditCancel.addEventListener('click', closeEditModal);
+  btnEditCancelTop.addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', (e) => {
+    if (e.target === editModal) closeEditModal();
+  });
 
   // ---------- Export/Import/Wipe ----------
   $('btnExport').addEventListener('click', () => {
@@ -2245,30 +2504,19 @@
     ctx.strokeRect(plot.x + plot.w - stripW, plot.y, stripW, plot.h);
   }
 
-  function drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight){
+  function drawGrid(plot, yTicks, yMap){
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'rgba(255,255,255,.08)';
 
-    // horizontal grid from left axis ticks
-    for (const t of yTicksLeft){
-      const y = yMapLeft(t);
+    for (const t of yTicks){
+      const y = yMap(t);
       ctx.beginPath();
       ctx.moveTo(plot.x, y);
       ctx.lineTo(plot.x + plot.w, y);
       ctx.stroke();
-    }
-
-    // y labels
-    for (const t of yTicksLeft){
-      const y = yMapLeft(t);
       text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
     }
-    for (const t of yTicksRight){
-      const y = yMapRight(t);
-      text(plot.x + plot.w + 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'left');
-    }
 
-    // plot border
     ctx.strokeStyle = 'rgba(255,255,255,.14)';
     ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
   }
@@ -2405,46 +2653,66 @@
   function renderRangeList(dayKeys, byDate){
     rangeList.innerHTML = '';
 
-    // newest first
     const reversed = dayKeys.slice().reverse();
+    const table = document.createElement('table');
+    table.className = 'rangeTable mono';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>${t('range.table.date')}</th>
+          <th>${t('range.table.morning')}</th>
+          <th>${t('range.table.morningHr')}</th>
+          <th>${t('range.table.evening')}</th>
+          <th>${t('range.table.eveningHr')}</th>
+          <th>${t('range.table.medication')}</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
 
+    const tbody = table.querySelector('tbody');
     let any = false;
 
+    const formatBpRows = (rows, withSlot=false) => {
+      if (!rows.length) return t('range.emptyDay');
+      return rows.map((r) => withSlot
+        ? `${prettySlot(r.timeSlot)} ${r.spAvg}/${r.dpAvg}`
+        : `${r.spAvg}/${r.dpAvg}`
+      ).join('<br>');
+    };
+    const formatHrRows = (rows, withSlot=false) => {
+      if (!rows.length) return t('range.emptyDay');
+      return rows.map((r) => withSlot
+        ? `${prettySlot(r.timeSlot)} ${r.hrAvg}`
+        : `${r.hrAvg}`
+      ).join('<br>');
+    };
+
     for (const d of reversed){
-      const arr = (byDate.get(d) || []).slice();
-      const med = meds[d] ? '💊' : '';
+      const arr = (byDate.get(d) || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+      if (arr.length) any = true;
 
-      const container = document.createElement('div');
-      container.className = 'item';
+      const morningRows = arr.filter(r => r.timeSlot === 'morning');
+      const nonMorningRows = arr.filter(r => r.timeSlot !== 'morning');
 
-      const left = document.createElement('div');
-      left.className = 'a';
-      left.innerHTML = `<div class="mono" style="font-weight:900">${d} <span style="margin-left:8px">${med}</span></div>`;
-
-      const right = document.createElement('div');
-      right.className = 'b mono';
-
-      if (!arr.length){
-        right.innerHTML = `<div>${t('range.emptyDay')}</div><div>${t('range.noEntries')}</div>`;
-      } else {
-        any = true;
-        const lines = arr
-          .sort((a,b) => (a.timeSlot||'').localeCompare(b.timeSlot||'') || (a.time||'').localeCompare(b.time||''))
-          .map(r => {
-            const c = bpCategory(r.spAvg, r.dpAvg);
-            return `${prettySlot(r.timeSlot)} ${r.time} • ${r.spAvg}/${r.dpAvg} • ${catText(c.key)}`;
-          });
-        right.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
-      }
-
-      container.appendChild(left);
-      container.appendChild(right);
-      rangeList.appendChild(container);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${d}</td>
+        <td>${formatBpRows(morningRows)}</td>
+        <td>${formatHrRows(morningRows)}</td>
+        <td>${formatBpRows(nonMorningRows, true)}</td>
+        <td>${formatHrRows(nonMorningRows, true)}</td>
+        <td class="center">${meds[d] ? '💊' : '—'}</td>
+      `;
+      tbody.appendChild(tr);
     }
 
     if (!any){
       rangeList.innerHTML = `<div class="notice">${t('range.noRecords')}</div>`;
+      return;
     }
+
+    rangeList.appendChild(table);
   }
 
   function drawOneDay(dateStr, records){
@@ -2454,21 +2722,15 @@
     const padL = 48, padR = 48, padT = 18, padB = 42;
     const plot = {x:padL, y:padT, w:w-padL-padR, h:h-padT-padB};
 
-    // axes ranges fixed per requirement
-    const spMin = 100, spMax = 200;
-    const dpMin = 60, dpMax = 160;
+    const spVals = records.map(r => r.spAvg);
+    const dpVals = records.map(r => r.dpAvg);
+    const yMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
+    const yMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
 
-    const yMapLeft = (v) => plot.y + plot.h * (1 - (v - spMin) / (spMax - spMin));
-    const yMapRight = (v) => plot.y + plot.h * (1 - (v - dpMin) / (dpMax - dpMin));
+    const yMap = (v) => plot.y + plot.h * (1 - (v - yMin) / (yMax - yMin));
 
-    // background
-    drawBands1D(plot, yMapLeft, yMapRight);
-
-    // ticks
-    const yTicksLeft = axisTicks(spMin, spMax, 5);
-    const yTicksRight = axisTicks(dpMin, dpMax, 5);
-
-    drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight);
+    const yTicks = axisTicks(yMin, yMax, 6);
+    drawGrid(plot, yTicks, yMap);
 
     // x positions based on order in day
     const sorted = records.slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
@@ -2481,8 +2743,8 @@
     const dpPts = sorted.map((r, i) => ({x:i, y:r.dpAvg, meta:r}));
 
     // lines
-    drawLine(spPts.map(p=>({x:p.x,y:p.y})), xMap, yMapLeft, 'rgba(138,180,255,.95)');
-    drawLine(dpPts.map(p=>({x:p.x,y:p.y})), xMap, yMapRight, 'rgba(255,196,61,.95)');
+    drawLine(spPts.map(p=>({x:p.x,y:p.y})), xMap, yMap, 'rgba(138,180,255,.95)');
+    drawLine(dpPts.map(p=>({x:p.x,y:p.y})), xMap, yMap, 'rgba(255,196,61,.95)');
 
     // x labels
     ctx.fillStyle = 'rgba(168,179,199,.9)';
@@ -2506,8 +2768,7 @@
     setLegend([
       {label: t('legend.spLine'), color:'rgba(138,180,255,.95)'},
       {label: t('legend.dpLine'), color:'rgba(255,196,61,.95)'},
-      {label: t('legend.bands'), color:'rgba(255,255,255,.25)'},
-      {label: t('legend.dpStrip'), color:'rgba(255,255,255,.25)'}
+      {label: t('legend.bars'), color:'rgba(255,255,255,.25)'}
     ]);
 
     // If no records, show message
@@ -2524,117 +2785,67 @@
     const {w, h} = resizeCanvasToCSS();
     clear();
 
-    const padL = 56, padR = 16, padT = 18, padB = 44;
+    const padL = 52, padR = 52, padT = 18, padB = 48;
     const plot = {x:padL, y:padT, w:w-padL-padR, h:h-padT-padB};
 
-    const yMin = 60; // show dp nicely
-    const yMax = 200;
+    const allRecords = dayKeys.flatMap(day => byDate.get(day) || []);
+    const spVals = allRecords.map(r => r.spAvg);
+    const dpVals = allRecords.map(r => r.dpAvg);
+
+    const yMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
+    const yMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
+
     const yMap = (v) => plot.y + plot.h * (1 - (v - yMin) / (yMax - yMin));
 
-    // background bands based on systolic thresholds for overall BP axis
-    const bands = [
-      {key:'n', label:'Normal', y1:100, y2:129},
-      {key:'s1', label:'Stage 1', y1:130, y2:139},
-      {key:'s2', label:'Stage 2', y1:140, y2:179},
-      {key:'s3', label:'Stage 3', y1:180, y2:200},
-    ];
-    for (const b of bands){
-      ctx.fillStyle = catColor(b.key);
-      const yy1 = yMap(b.y2);
-      const yy2 = yMap(b.y1);
-      ctx.fillRect(plot.x, yy1, plot.w, (yy2-yy1));
-    }
+    const yTicks = axisTicks(yMin, yMax, 6);
+    drawGrid(plot, yTicks, yMap);
 
-    // grid and y axis ticks
-    const yTicks = axisTicks(yMin, yMax, 7);
-    ctx.strokeStyle = 'rgba(255,255,255,.08)';
-    ctx.lineWidth = 1;
-    for (const t of yTicks){
-      const y = yMap(t);
-      ctx.beginPath();
-      ctx.moveTo(plot.x, y);
-      ctx.lineTo(plot.x + plot.w, y);
-      ctx.stroke();
-      text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
-    }
-
-    ctx.strokeStyle = 'rgba(255,255,255,.14)';
-    ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
-
-    // x centers
     const nDays = Math.max(1, dayKeys.length);
     const xCenters = dayKeys.map((_, i) => plot.x + plot.w * (nDays===1 ? 0.5 : i/(nDays-1)));
-
-    // Build series with bar/point logic per day
-    const seriesSP = [];
-    const seriesDP = [];
-
-    for (const day of dayKeys){
-      const arr = (byDate.get(day) || []);
-      if (arr.length <= 1){
-        if (arr.length === 1){
-          seriesSP.push({kind:'point', v: arr[0].spAvg});
-          seriesDP.push({kind:'point', v: arr[0].dpAvg});
-        } else {
-          seriesSP.push({kind:'point', v: NaN});
-          seriesDP.push({kind:'point', v: NaN});
-        }
-      } else {
-        const sps = arr.map(r=>r.spAvg);
-        const dps = arr.map(r=>r.dpAvg);
-        seriesSP.push({kind:'bar', min: Math.min(...sps), max: Math.max(...sps)});
-        seriesDP.push({kind:'bar', min: Math.min(...dps), max: Math.max(...dps)});
-      }
-    }
-
-    // filter out NaN points by not drawing them
     const colorSP = 'rgba(138,180,255,.95)';
     const colorDP = 'rgba(255,196,61,.95)';
 
-    // draw with slight x offsets
-    const off = Math.max(6, plot.w / (dayKeys.length * 10));
-
-    // Bars/points for SP
-    for (let i=0;i<dayKeys.length;i++){
-      const x = xCenters[i] - off;
-      const item = seriesSP[i];
-      if (item.kind==='point'){
-        if (!Number.isFinite(item.v)) continue;
-        ctx.fillStyle = colorSP;
-        ctx.beginPath();
-        ctx.arc(x, yMap(item.v), 4, 0, Math.PI*2);
-        ctx.fill();
+    const drawMarker = (x, y, type, color) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      if (type === 'triangle'){
+        ctx.moveTo(x, y - 5);
+        ctx.lineTo(x - 5, y + 4);
+        ctx.lineTo(x + 5, y + 4);
+      } else if (type === 'square'){
+        ctx.rect(x - 4, y - 4, 8, 8);
       } else {
-        const y1 = yMap(item.max);
-        const y2 = yMap(item.min);
-        const wBar = Math.max(6, plot.w / (dayKeys.length * 5));
-        ctx.fillStyle = colorSP;
-        drawRoundedRect(x - wBar/2, y1, wBar, Math.max(2, y2-y1), 4);
-        ctx.fill();
+        ctx.arc(x, y, 4, 0, Math.PI*2);
+      }
+      ctx.closePath();
+      ctx.fill();
+    };
+
+    for (let i=0;i<dayKeys.length;i++){
+      const day = dayKeys[i];
+      const dayRecords = (byDate.get(day) || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
+      const baseX = xCenters[i];
+      let customOffset = -4;
+
+      for (const r of dayRecords){
+        let marker = 'circle';
+        let offset = customOffset;
+        if (r.timeSlot === 'morning'){
+          marker = 'triangle';
+          offset = -12;
+        } else if (r.timeSlot === 'evening'){
+          marker = 'square';
+          offset = 12;
+        } else {
+          customOffset += 6;
+        }
+
+        const x = baseX + offset;
+        drawMarker(x - 2, yMap(r.spAvg), marker, colorSP);
+        drawMarker(x + 2, yMap(r.dpAvg), marker, colorDP);
       }
     }
 
-    // Bars/points for DP
-    for (let i=0;i<dayKeys.length;i++){
-      const x = xCenters[i] + off;
-      const item = seriesDP[i];
-      if (item.kind==='point'){
-        if (!Number.isFinite(item.v)) continue;
-        ctx.fillStyle = colorDP;
-        ctx.beginPath();
-        ctx.arc(x, yMap(item.v), 4, 0, Math.PI*2);
-        ctx.fill();
-      } else {
-        const y1 = yMap(item.max);
-        const y2 = yMap(item.min);
-        const wBar = Math.max(6, plot.w / (dayKeys.length * 5));
-        ctx.fillStyle = colorDP;
-        drawRoundedRect(x - wBar/2, y1, wBar, Math.max(2, y2-y1), 4);
-        ctx.fill();
-      }
-    }
-
-    // x labels (sparse for 4w)
     const step = mode==='4w' ? 4 : 1;
     ctx.fillStyle = 'rgba(168,179,199,.9)';
     ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Arial';
@@ -2643,10 +2854,29 @@
     for (let i=0;i<dayKeys.length;i+=step){
       const x = xCenters[i];
       const d = dayKeys[i];
-      // show MM-DD
+      const dayRecords = byDate.get(d) || [];
+      const aboveStage1Count = dayRecords.filter((r) => {
+        const key = bpCategory(r.spAvg, r.dpAvg).key;
+        return key === 's2' || key === 's3';
+      }).length;
+
       ctx.fillText(d.slice(5), x, plot.y + plot.h + 10);
       if (meds[d]){
         ctx.fillText('💊', x, plot.y + plot.h + 24);
+      }
+
+      if (aboveStage1Count > 0){
+        const cy = plot.y + plot.h + 40;
+        ctx.fillStyle = 'rgba(255,120,80,.95)';
+        ctx.beginPath();
+        ctx.arc(x, cy, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(15,22,33,.95)';
+        ctx.font = '700 10px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(aboveStage1Count), x, cy);
+        ctx.textBaseline = 'top';
       }
     }
 
@@ -2661,9 +2891,7 @@
       {label: t('legend.meds'), color:'rgba(255,255,255,.25)'}
     ]);
 
-    // If empty
-    const any = Array.from(byDate.values()).some(arr => arr.length);
-    if (!any){
+    if (!allRecords.length){
       ctx.fillStyle = 'rgba(233,238,246,.85)';
       ctx.font = '700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial';
       ctx.textAlign = 'center';
@@ -2696,6 +2924,24 @@
   const btnScaleClose = $('btnScaleClose');
   const scaleTextSlider = $('scaleTextSlider');
   const scaleButtonSlider = $('scaleButtonSlider');
+  const showInputSliders = $('showInputSliders');
+
+
+  function applyInputSliderVisibility(show){
+    document.querySelectorAll('.vitalsSlider').forEach((el) => {
+      el.classList.toggle('hidden', !show);
+    });
+    showInputSliders.checked = !!show;
+  }
+
+  function loadInputSliderVisibility(){
+    return localStorage.getItem(KEY_INPUT_SLIDER_VISIBLE) === '1';
+  }
+
+  function setInputSliderVisibility(show){
+    localStorage.setItem(KEY_INPUT_SLIDER_VISIBLE, show ? '1' : '0');
+    applyInputSliderVisibility(show);
+  }
 
   function openScaleModal(){
     scaleModal.classList.remove('hidden');
@@ -2716,6 +2962,9 @@
     if (e.key === 'Escape' && !scaleModal.classList.contains('hidden')){
       closeScaleModal();
     }
+    if (e.key === 'Escape' && !editModal.classList.contains('hidden')){
+      closeEditModal();
+    }
   });
 
   function handleScaleChange(){
@@ -2728,6 +2977,7 @@
 
   scaleTextSlider.addEventListener('input', handleScaleChange);
   scaleButtonSlider.addEventListener('input', handleScaleChange);
+  showInputSliders.addEventListener('change', () => setInputSliderVisibility(showInputSliders.checked));
 
   // ---------- Init ----------
   function init(){
@@ -2748,6 +2998,7 @@
     applyUiScalePrefs(loadUiScalePrefs());
     observeScaleForNewNodes();
     initDriveAuth();
+    applyInputSliderVisibility(loadInputSliderVisibility());
 
     const storedLang = localStorage.getItem('bp_lang');
     const browserLang = (navigator.language || '').toLowerCase();
