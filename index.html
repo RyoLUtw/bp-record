@@ -463,6 +463,34 @@
 
     .hidden{display:none !important}
 
+    .editDialog{
+      width:min(560px, 100%);
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(17,24,36,.95), rgba(15,22,33,.95));
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .editGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    .editGrid .full{grid-column:1 / -1}
+    .editField{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .editActions{
+      margin-top:14px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .scaleModal{
       position:fixed;
       inset:0;
@@ -547,6 +575,59 @@
           <input type="checkbox" id="showInputSliders" />
           <span data-i18n="scale.showInputSliders">Show SP/DP/HR sliders in input</span>
         </label>
+      </div>
+    </div>
+
+
+    <div class="scaleModal hidden" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <div class="editDialog">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <strong id="editTitle" data-i18n="edit.title">Edit measurement</strong>
+          <button class="btn secondary smallBtn" id="btnEditCancelTop" type="button" data-i18n="actions.cancel">Cancel</button>
+        </div>
+
+        <div class="editGrid">
+          <div class="editField">
+            <label for="editDate" data-i18n="labels.date">Date</label>
+            <input type="date" id="editDate" />
+          </div>
+          <div class="editField">
+            <label for="editTime" data-i18n="labels.time">Time</label>
+            <input type="time" id="editTime" />
+          </div>
+          <div class="editField">
+            <label for="editSlot" data-i18n="review.modeLabel">Mode</label>
+            <select id="editSlot">
+              <option value="morning" data-i18n="timeSlot.morning">Morning</option>
+              <option value="midday" data-i18n="time.midday">Midday</option>
+              <option value="evening" data-i18n="timeSlot.evening">Evening</option>
+              <option value="night" data-i18n="time.night">Night</option>
+              <option value="other" data-i18n="time.other">Other</option>
+            </select>
+          </div>
+          <label class="editField" style="justify-content:flex-end;">
+            <span data-i18n="medication.title">Medication taken today</span>
+            <input type="checkbox" id="editMedTaken" />
+          </label>
+
+          <div class="editField">
+            <label for="editSp" data-i18n="labels.systolic">Systolic (SP)</label>
+            <input class="mono" type="number" id="editSp" min="60" max="200" step="1" />
+          </div>
+          <div class="editField">
+            <label for="editDp" data-i18n="labels.diastolic">Diastolic (DP)</label>
+            <input class="mono" type="number" id="editDp" min="40" max="160" step="1" />
+          </div>
+          <div class="editField full">
+            <label for="editHr" data-i18n="labels.heartRate">Heart rate</label>
+            <input class="mono" type="number" id="editHr" min="60" max="130" step="1" />
+          </div>
+        </div>
+
+        <div class="editActions">
+          <button class="btn secondary" id="btnEditCancel" type="button" data-i18n="actions.cancel">Cancel</button>
+          <button class="btn" id="btnEditConfirm" type="button" data-i18n="actions.confirmChange">Confirm change</button>
+        </div>
       </div>
     </div>
 
@@ -918,7 +999,11 @@
       'actions.import': 'Import JSON',
       'actions.wipe': 'Wipe all data',
       'actions.refresh': 'Refresh',
+      'actions.edit': 'Edit',
       'actions.delete': 'Delete',
+      'actions.cancel': 'Cancel',
+      'actions.confirmChange': 'Confirm change',
+      'edit.title': 'Edit measurement',
       'actions.addMeasurement': 'Add measurement',
       'defaults.prefix': 'Defaults: {source}',
       'defaults.sevenDay': '7-day avg (n={count})',
@@ -1044,7 +1129,11 @@
       'actions.import': '匯入 JSON',
       'actions.wipe': '清除所有資料',
       'actions.refresh': '更新',
+      'actions.edit': '編輯',
       'actions.delete': '刪除',
+      'actions.cancel': '取消',
+      'actions.confirmChange': '確認修改',
+      'edit.title': '編輯量測',
       'actions.addMeasurement': '新增量測',
       'defaults.prefix': '預設值：{source}',
       'defaults.sevenDay': '近 7 天平均（n={count}）',
@@ -1830,13 +1919,18 @@
       b.className = 'b mono';
       b.innerHTML = `
         <div class="badge" style="background:${catColor(cat.key)}; color:var(--text); font-weight:900">${catText(cat.key)}</div>
-        <div style="margin-top:6px"><button class="btn secondary smallBtn" data-del="${r.id}">${t('actions.delete')}</button></div>
+        <div style="margin-top:6px; display:flex; gap:8px; justify-content:flex-end;"><button class="btn secondary smallBtn" data-edit="${r.id}">${t('actions.edit')}</button><button class="btn secondary smallBtn" data-del="${r.id}">${t('actions.delete')}</button></div>
       `;
 
       left.appendChild(a);
       left.appendChild(b);
       recentList.appendChild(left);
     }
+
+
+    recentList.querySelectorAll('button[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openEditModal(btn.getAttribute('data-edit')));
+    });
 
     // Delete handler
     recentList.querySelectorAll('button[data-del]').forEach(btn => {
@@ -1863,6 +1957,90 @@
       target.classList.remove('flash');
     }, {once:true});
   }
+
+
+  // ---------- Edit modal ----------
+  const editModal = $('editModal');
+  const editDate = $('editDate');
+  const editTime = $('editTime');
+  const editSlot = $('editSlot');
+  const editMedTaken = $('editMedTaken');
+  const editSp = $('editSp');
+  const editDp = $('editDp');
+  const editHr = $('editHr');
+  const btnEditConfirm = $('btnEditConfirm');
+  const btnEditCancel = $('btnEditCancel');
+  const btnEditCancelTop = $('btnEditCancelTop');
+  let editingRecordId = '';
+
+  function closeEditModal(){
+    editModal.classList.add('hidden');
+    editingRecordId = '';
+  }
+
+  function openEditModal(recordId){
+    const rec = loadRecords().find((x) => x.id === recordId);
+    if (!rec) return;
+    editingRecordId = recordId;
+
+    editDate.value = rec.date || fmtDate(new Date());
+    editTime.value = rec.time || '08:00';
+    editSlot.value = rec.timeSlot || 'morning';
+    editSp.value = String(rec.spAvg ?? '');
+    editDp.value = String(rec.dpAvg ?? '');
+    editHr.value = String(rec.hrAvg ?? '');
+    editMedTaken.checked = !!meds[rec.date];
+
+    editModal.classList.remove('hidden');
+  }
+
+  function confirmEdit(){
+    if (!editingRecordId) return;
+    const sp = Number(editSp.value);
+    const dp = Number(editDp.value);
+    const hr = Number(editHr.value);
+    const date = editDate.value || fmtDate(new Date());
+    const time = editTime.value || '00:00';
+    const slot = editSlot.value || 'morning';
+
+    const ok = (v, lo, hi) => Number.isFinite(v) && v >= lo && v <= hi;
+    if (!(ok(sp,60,200) && ok(dp,40,160) && ok(hr,60,130))){
+      alert('Please ensure all values are within the allowed ranges.');
+      return;
+    }
+
+    const records = loadRecords();
+    const idx = records.findIndex((x) => x.id === editingRecordId);
+    if (idx < 0) return;
+
+    const cat = bpCategory(sp, dp);
+    records[idx] = {
+      ...records[idx],
+      date,
+      time,
+      timeSlot: slot,
+      spAvg: sp,
+      dpAvg: dp,
+      hrAvg: hr,
+      category: cat.key,
+      medsTaken: !!editMedTaken.checked,
+    };
+
+    meds[date] = !!editMedTaken.checked;
+    saveMeds(meds);
+    saveRecords(records);
+    closeEditModal();
+    renderRecent();
+    refreshReview();
+    saveToDrive({silent:true});
+  }
+
+  btnEditConfirm.addEventListener('click', confirmEdit);
+  btnEditCancel.addEventListener('click', closeEditModal);
+  btnEditCancelTop.addEventListener('click', closeEditModal);
+  editModal.addEventListener('click', (e) => {
+    if (e.target === editModal) closeEditModal();
+  });
 
   // ---------- Export/Import/Wipe ----------
   $('btnExport').addEventListener('click', () => {
@@ -2771,6 +2949,9 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !scaleModal.classList.contains('hidden')){
       closeScaleModal();
+    }
+    if (e.key === 'Escape' && !editModal.classList.contains('hidden')){
+      closeEditModal();
     }
   });
 
