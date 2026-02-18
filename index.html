@@ -2673,23 +2673,35 @@
     const tbody = table.querySelector('tbody');
     let any = false;
 
-    const formatBp = (r) => r ? `${r.spAvg}/${r.dpAvg}` : t('range.emptyDay');
-    const formatHr = (r) => r ? String(r.hrAvg) : t('range.emptyDay');
+    const formatBpRows = (rows, withSlot=false) => {
+      if (!rows.length) return t('range.emptyDay');
+      return rows.map((r) => withSlot
+        ? `${prettySlot(r.timeSlot)} ${r.spAvg}/${r.dpAvg}`
+        : `${r.spAvg}/${r.dpAvg}`
+      ).join('<br>');
+    };
+    const formatHrRows = (rows, withSlot=false) => {
+      if (!rows.length) return t('range.emptyDay');
+      return rows.map((r) => withSlot
+        ? `${prettySlot(r.timeSlot)} ${r.hrAvg}`
+        : `${r.hrAvg}`
+      ).join('<br>');
+    };
 
     for (const d of reversed){
       const arr = (byDate.get(d) || []).slice().sort((a,b) => (a.time || '').localeCompare(b.time || ''));
       if (arr.length) any = true;
 
-      const morning = arr.find(r => r.timeSlot === 'morning');
-      const evening = arr.find(r => r.timeSlot === 'evening');
+      const morningRows = arr.filter(r => r.timeSlot === 'morning');
+      const nonMorningRows = arr.filter(r => r.timeSlot !== 'morning');
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${d}</td>
-        <td>${formatBp(morning)}</td>
-        <td>${formatHr(morning)}</td>
-        <td>${formatBp(evening)}</td>
-        <td>${formatHr(evening)}</td>
+        <td>${formatBpRows(morningRows)}</td>
+        <td>${formatHrRows(morningRows)}</td>
+        <td>${formatBpRows(nonMorningRows, true)}</td>
+        <td>${formatHrRows(nonMorningRows, true)}</td>
         <td class="center">${meds[d] ? '💊' : '—'}</td>
       `;
       tbody.appendChild(tr);
