@@ -1679,17 +1679,24 @@
   function resolveAutoDateAndSlot(baseDateStr){
     const now = new Date();
     const hour = now.getHours();
-    const slot = (hour < 4)
-      ? 'evening'
-      : (hour < 12 ? 'morning' : 'evening');
+    const minute = now.getMinutes();
+    const hhmm = `${pad2(hour)}:${pad2(minute)}`;
 
     if (hour < 4){
       const d = parseDate(baseDateStr);
       d.setDate(d.getDate() - 1);
-      return {date: fmtDate(d), slot};
+      return {date: fmtDate(d), slot:'evening', time:'23:59'};
     }
 
-    return {date: baseDateStr, slot};
+    if (hour < 12){
+      return {date: baseDateStr, slot:'morning', time:hhmm};
+    }
+
+    if (hour < 17){
+      return {date: baseDateStr, slot:'midday', time:hhmm};
+    }
+
+    return {date: baseDateStr, slot:'evening', time:hhmm};
   }
 
   function nowHHMM(){
@@ -1733,13 +1740,14 @@
 
     const date = resolved.date;
     const slot = resolved.slot;
+    const recordTime = resolved.time || nowHHMM();
 
     if (!(date in meds)) meds[date] = false;
 
     const rec = {
       id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + Math.random().toString(16).slice(2),
       date,
-      time: nowHHMM(),
+      time: recordTime,
       timeSlot: slot,
       // raw readings
       r1: a,
