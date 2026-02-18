@@ -1675,6 +1675,23 @@
     return chosen;
   }
 
+
+  function resolveAutoDateAndSlot(baseDateStr){
+    const now = new Date();
+    const hour = now.getHours();
+    const slot = (hour < 4)
+      ? 'evening'
+      : (hour < 12 ? 'morning' : 'evening');
+
+    if (hour < 4){
+      const d = parseDate(baseDateStr);
+      d.setDate(d.getDate() - 1);
+      return {date: fmtDate(d), slot};
+    }
+
+    return {date: baseDateStr, slot};
+  }
+
   function nowHHMM(){
     const d = new Date();
     return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
@@ -1696,8 +1713,8 @@
     // Basic validation
     const ok = (v, lo, hi) => Number.isFinite(v) && v>=lo && v<=hi;
     const valid =
-      ok(a.sp,100,200) && ok(a.dp,60,160) && ok(a.hr,60,130) &&
-      ok(b.sp,100,200) && ok(b.dp,60,160) && ok(b.hr,60,130);
+      ok(a.sp,60,200) && ok(a.dp,40,160) && ok(a.hr,60,130) &&
+      ok(b.sp,60,200) && ok(b.dp,40,160) && ok(b.hr,60,130);
     if (!valid){
       alert('Please ensure all values are within the allowed ranges.');
       return;
@@ -1708,8 +1725,16 @@
     const hrAvg = Math.round((a.hr + b.hr) / 2);
     const cat = bpCategory(spAvg, dpAvg);
 
-    const date = currentInputDate();
-    const slot = currentSlot();
+    const inputDateStr = currentInputDate();
+    const chosen = timeSlot.value;
+    const resolved = chosen === 'auto'
+      ? resolveAutoDateAndSlot(inputDateStr)
+      : {date: inputDateStr, slot: currentSlot()};
+
+    const date = resolved.date;
+    const slot = resolved.slot;
+
+    if (!(date in meds)) meds[date] = false;
 
     const rec = {
       id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + '_' + Math.random().toString(16).slice(2),
