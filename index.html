@@ -975,8 +975,8 @@
       'legend.dpStrip': 'Right strip: DP bands',
       'legend.sp': 'SP (systolic)',
       'legend.dp': 'DP (diastolic)',
-      'legend.points': 'Markers: morning ▲ / evening ■',
-      'legend.bars': 'SP left axis / DP right axis',
+      'legend.points': 'Markers: morning ▲ / evening ■ (SP and DP)',
+      'legend.bars': 'Single shared y-axis range',
       'legend.meds': '💊 medication taken (per day)',
       'cat.normal': 'Normal',
       'cat.stage1': 'Stage 1',
@@ -1101,8 +1101,8 @@
       'legend.dpStrip': '右側色帶：DP 區間',
       'legend.sp': 'SP（收縮壓）',
       'legend.dp': 'DP（舒張壓）',
-      'legend.points': '標記：早上 ▲／晚上 ■',
-      'legend.bars': 'SP 左軸／DP 右軸',
+      'legend.points': '標記：早上 ▲／晚上 ■（SP 與 DP）',
+      'legend.bars': '共用單一 y 軸範圍',
       'legend.meds': '💊 當日已服藥',
       'cat.normal': '正常',
       'cat.stage1': '第 1 期',
@@ -2293,30 +2293,19 @@
     ctx.strokeRect(plot.x + plot.w - stripW, plot.y, stripW, plot.h);
   }
 
-  function drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight){
+  function drawGrid(plot, yTicks, yMap){
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'rgba(255,255,255,.08)';
 
-    // horizontal grid from left axis ticks
-    for (const t of yTicksLeft){
-      const y = yMapLeft(t);
+    for (const t of yTicks){
+      const y = yMap(t);
       ctx.beginPath();
       ctx.moveTo(plot.x, y);
       ctx.lineTo(plot.x + plot.w, y);
       ctx.stroke();
-    }
-
-    // y labels
-    for (const t of yTicksLeft){
-      const y = yMapLeft(t);
       text(plot.x - 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'right');
     }
-    for (const t of yTicksRight){
-      const y = yMapRight(t);
-      text(plot.x + plot.w + 8, y, String(t), 'rgba(168,179,199,.85)', 11, 'left');
-    }
 
-    // plot border
     ctx.strokeStyle = 'rgba(255,255,255,.14)';
     ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
   }
@@ -2512,22 +2501,13 @@
 
     const spVals = records.map(r => r.spAvg);
     const dpVals = records.map(r => r.dpAvg);
-    const spMin = spVals.length ? Math.max(40, Math.min(...spVals) - 20) : 100;
-    const spMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
-    const dpMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
-    const dpMax = dpVals.length ? Math.min(220, Math.max(...dpVals) + 20) : 160;
+    const yMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
+    const yMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
 
-    const yMapLeft = (v) => plot.y + plot.h * (1 - (v - spMin) / (spMax - spMin));
-    const yMapRight = (v) => plot.y + plot.h * (1 - (v - dpMin) / (dpMax - dpMin));
+    const yMap = (v) => plot.y + plot.h * (1 - (v - yMin) / (yMax - yMin));
 
-    // background
-    drawBands1D(plot, yMapLeft, yMapRight);
-
-    // ticks
-    const yTicksLeft = axisTicks(spMin, spMax, 5);
-    const yTicksRight = axisTicks(dpMin, dpMax, 5);
-
-    drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight);
+    const yTicks = axisTicks(yMin, yMax, 6);
+    drawGrid(plot, yTicks, yMap);
 
     // x positions based on order in day
     const sorted = records.slice().sort((a,b) => (a.time||'').localeCompare(b.time||''));
@@ -2540,8 +2520,8 @@
     const dpPts = sorted.map((r, i) => ({x:i, y:r.dpAvg, meta:r}));
 
     // lines
-    drawLine(spPts.map(p=>({x:p.x,y:p.y})), xMap, yMapLeft, 'rgba(138,180,255,.95)');
-    drawLine(dpPts.map(p=>({x:p.x,y:p.y})), xMap, yMapRight, 'rgba(255,196,61,.95)');
+    drawLine(spPts.map(p=>({x:p.x,y:p.y})), xMap, yMap, 'rgba(138,180,255,.95)');
+    drawLine(dpPts.map(p=>({x:p.x,y:p.y})), xMap, yMap, 'rgba(255,196,61,.95)');
 
     // x labels
     ctx.fillStyle = 'rgba(168,179,199,.9)';
@@ -2565,8 +2545,7 @@
     setLegend([
       {label: t('legend.spLine'), color:'rgba(138,180,255,.95)'},
       {label: t('legend.dpLine'), color:'rgba(255,196,61,.95)'},
-      {label: t('legend.bands'), color:'rgba(255,255,255,.25)'},
-      {label: t('legend.dpStrip'), color:'rgba(255,255,255,.25)'}
+      {label: t('legend.bars'), color:'rgba(255,255,255,.25)'}
     ]);
 
     // If no records, show message
@@ -2590,19 +2569,13 @@
     const spVals = allRecords.map(r => r.spAvg);
     const dpVals = allRecords.map(r => r.dpAvg);
 
-    const spMin = spVals.length ? Math.max(40, Math.min(...spVals) - 20) : 100;
-    const spMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
-    const dpMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
-    const dpMax = dpVals.length ? Math.min(220, Math.max(...dpVals) + 20) : 160;
+    const yMin = dpVals.length ? Math.max(30, Math.min(...dpVals) - 20) : 60;
+    const yMax = spVals.length ? Math.min(260, Math.max(...spVals) + 20) : 200;
 
-    const yMapLeft = (v) => plot.y + plot.h * (1 - (v - spMin) / (spMax - spMin));
-    const yMapRight = (v) => plot.y + plot.h * (1 - (v - dpMin) / (dpMax - dpMin));
+    const yMap = (v) => plot.y + plot.h * (1 - (v - yMin) / (yMax - yMin));
 
-    drawBands1D(plot, yMapLeft, yMapRight);
-
-    const yTicksLeft = axisTicks(spMin, spMax, 6);
-    const yTicksRight = axisTicks(dpMin, dpMax, 6);
-    drawGrid(plot, yTicksLeft, yTicksRight, yMapLeft, yMapRight);
+    const yTicks = axisTicks(yMin, yMax, 6);
+    drawGrid(plot, yTicks, yMap);
 
     const nDays = Math.max(1, dayKeys.length);
     const xCenters = dayKeys.map((_, i) => plot.x + plot.w * (nDays===1 ? 0.5 : i/(nDays-1)));
@@ -2645,8 +2618,8 @@
         }
 
         const x = baseX + offset;
-        drawMarker(x - 2, yMapLeft(r.spAvg), marker, colorSP);
-        drawMarker(x + 2, yMapRight(r.dpAvg), marker, colorDP);
+        drawMarker(x - 2, yMap(r.spAvg), marker, colorSP);
+        drawMarker(x + 2, yMap(r.dpAvg), marker, colorDP);
       }
     }
 
@@ -2658,9 +2631,29 @@
     for (let i=0;i<dayKeys.length;i+=step){
       const x = xCenters[i];
       const d = dayKeys[i];
+      const dayRecords = byDate.get(d) || [];
+      const aboveStage1Count = dayRecords.filter((r) => {
+        const key = bpCategory(r.spAvg, r.dpAvg).key;
+        return key === 's2' || key === 's3';
+      }).length;
+
       ctx.fillText(d.slice(5), x, plot.y + plot.h + 10);
       if (meds[d]){
         ctx.fillText('💊', x, plot.y + plot.h + 24);
+      }
+
+      if (aboveStage1Count > 0){
+        const cy = plot.y + plot.h + 40;
+        ctx.fillStyle = 'rgba(255,120,80,.95)';
+        ctx.beginPath();
+        ctx.arc(x, cy, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(15,22,33,.95)';
+        ctx.font = '700 10px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(aboveStage1Count), x, cy);
+        ctx.textBaseline = 'top';
       }
     }
 
