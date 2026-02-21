@@ -523,6 +523,37 @@
       color:var(--muted);
     }
 
+    .prepDialog{
+      width:min(760px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(17,24,36,.95), rgba(15,22,33,.95));
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .prepInstructions{
+      margin:10px 0 14px;
+      padding-left:20px;
+      color:var(--text);
+      font-size:14px;
+      line-height:1.5;
+    }
+    .prepInstructions li + li{margin-top:8px;}
+    .prepVideoWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:#000;
+    }
+    .prepVideoWrap iframe{
+      width:100%;
+      aspect-ratio:16/9;
+      display:block;
+      border:0;
+    }
+
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -575,6 +606,25 @@
           <input type="checkbox" id="showInputSliders" />
           <span data-i18n="scale.showInputSliders">Show SP/DP/HR sliders in input</span>
         </label>
+      </div>
+    </div>
+
+    <div class="scaleModal hidden" id="prepModal" role="dialog" aria-modal="true" aria-labelledby="prepTitle">
+      <div class="prepDialog">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <strong id="prepTitle" data-i18n="prep.title">Before your measurement</strong>
+          <button class="btn secondary smallBtn" id="btnPrepClose" type="button" data-i18n-aria="actions.close">✕</button>
+        </div>
+        <ol class="prepInstructions">
+          <li data-i18n="prep.step1">Sit comfortably in a chair with back supported (not perched on the edge).</li>
+          <li data-i18n="prep.step2">Feet flat on the floor, legs uncrossed.</li>
+          <li data-i18n="prep.step3">Rest your arm on a table/armrest so the cuff is at heart level.</li>
+          <li data-i18n="prep.step4">Relax your shoulders, jaw, and hands (don’t clench a fist).</li>
+          <li data-i18n="prep.step5">Stay still and quiet—no talking, no phone scrolling, no reading something stressful, no walking around.</li>
+        </ol>
+        <div class="prepVideoWrap">
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/n5mkXSARqX0?si=hI42wg4Ts323fRu9" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
       </div>
     </div>
 
@@ -974,6 +1024,12 @@
       'time.other': 'Other',
       'input.title': 'Measurement input',
       'input.hint': 'Defaults to last 7-day averages (or 120/80 HR 80)',
+      'prep.title': 'Before your measurement',
+      'prep.step1': 'Sit comfortably in a chair with back supported (not perched on the edge).',
+      'prep.step2': 'Feet flat on the floor, legs uncrossed.',
+      'prep.step3': 'Rest your arm on a table/armrest so the cuff is at heart level.',
+      'prep.step4': 'Relax your shoulders, jaw, and hands (don’t clench a fist).',
+      'prep.step5': 'Stay still and quiet—no talking, no phone scrolling, no reading something stressful, no walking around.',
       'medication.title': 'Medication taken today',
       'medication.note': 'Stored per date. It will show in the review list.',
       'medication.titleHint': 'This is stored per day',
@@ -1104,6 +1160,12 @@
       'time.other': '其他',
       'input.title': '量測輸入',
       'input.hint': '預設為近 7 天平均（或 120/80 心跳 80）',
+      'prep.title': '量測前準備',
+      'prep.step1': '舒服地坐在有椅背支撐的椅子上（不要只坐在椅緣）。',
+      'prep.step2': '雙腳平放地面，雙腿不要交叉。',
+      'prep.step3': '手臂放在桌面或扶手上，讓血壓袖帶與心臟同高。',
+      'prep.step4': '放鬆肩膀、下巴與雙手（不要握拳）。',
+      'prep.step5': '保持安靜與不動：不要說話、不要滑手機、不要看讓人緊張的內容，也不要走動。',
       'medication.title': '今日已服藥',
       'medication.note': '以日期儲存，會在檢視清單顯示。',
       'medication.titleHint': '此設定以日期儲存',
@@ -1638,6 +1700,9 @@
   // ---------- Timer ----------
   const timerEl = $('timer');
   const btnTimer = $('btnTimer');
+  const prepModal = $('prepModal');
+  const btnPrepClose = $('btnPrepClose');
+  let pendingInputOpen = false;
   let timer = null;
   let remain = 60;
   let isTimerRunning = false;
@@ -1872,8 +1937,25 @@
   }
 
   btnSave.addEventListener('click', saveAveraged);
-  btnAddMeasurement.addEventListener('click', () => {
-    showInputPanel();
+  function openPrepModal(){
+    pendingInputOpen = true;
+    prepModal.classList.remove('hidden');
+  }
+
+  function closePrepModal(){
+    prepModal.classList.add('hidden');
+    if (pendingInputOpen){
+      showInputPanel();
+      pendingInputOpen = false;
+    }
+  }
+
+  btnAddMeasurement.addEventListener('click', openPrepModal);
+  btnPrepClose.addEventListener('click', closePrepModal);
+  prepModal.addEventListener('click', (e) => {
+    if (e.target === prepModal){
+      closePrepModal();
+    }
   });
 
   // ---------- Recent list ----------
@@ -2959,6 +3041,10 @@
     }
   });
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !prepModal.classList.contains('hidden')){
+      closePrepModal();
+      return;
+    }
     if (e.key === 'Escape' && !scaleModal.classList.contains('hidden')){
       closeScaleModal();
     }
