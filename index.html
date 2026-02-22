@@ -553,6 +553,34 @@
       display:block;
       border:0;
     }
+    .prepMoonWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background: radial-gradient(circle at 50% 45%, #101317, #0b0d0f 70%, #080a0c);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .prepMoonWrap canvas{
+      width:100%;
+      aspect-ratio:1/1;
+      display:block;
+      border-radius:12px;
+      background: radial-gradient(circle at 50% 45%, #101317, #0b0d0f 70%, #080a0c);
+    }
+    .prepMoonMeta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .prepMoonTime{font-size:18px; color:var(--text); font-weight:700; letter-spacing:.08em;}
+    .prepMoonProgress{height:8px; background:rgba(255,255,255,.1); border-radius:999px; overflow:hidden;}
+    .prepMoonBar{height:100%; width:0; background:rgba(233,226,214,.45);}
 
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -606,6 +634,13 @@
           <input type="checkbox" id="showInputSliders" />
           <span data-i18n="scale.showInputSliders">Show SP/DP/HR sliders in input</span>
         </label>
+        <label class="notice" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+          <span data-i18n="scale.idleTimerMode">5-minute idle timer</span>
+          <select id="idleTimerMode" style="margin-left:auto;">
+            <option value="ocean" data-i18n="scale.idleTimerOcean">Ocean Wave (video)</option>
+            <option value="moon" data-i18n="scale.idleTimerMoon">Moon Orbit (timer)</option>
+          </select>
+        </label>
       </div>
     </div>
 
@@ -624,6 +659,14 @@
         </ol>
         <div class="prepVideoWrap">
           <iframe width="560" height="315" src="https://www.youtube.com/embed/n5mkXSARqX0?si=hI42wg4Ts323fRu9" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+        <div class="prepMoonWrap hidden" id="prepMoonWrap">
+          <canvas id="prepMoonCanvas"></canvas>
+          <div class="prepMoonMeta">
+            <span data-i18n="prep.moonHint">One orbit = one minute</span>
+            <strong class="prepMoonTime mono" id="prepMoonTime">05:00</strong>
+          </div>
+          <div class="prepMoonProgress"><div class="prepMoonBar" id="prepMoonBar"></div></div>
         </div>
       </div>
     </div>
@@ -1051,6 +1094,10 @@
       'scale.text': 'Text size',
       'scale.buttons': 'Button size',
       'scale.showInputSliders': 'Show SP/DP/HR sliders in input',
+      'scale.idleTimerMode': '5-minute idle timer',
+      'scale.idleTimerOcean': 'Ocean Wave (video)',
+      'scale.idleTimerMoon': 'Moon Orbit (timer)',
+      'prep.moonHint': 'One orbit = one minute',
       'actions.export': 'Export JSON',
       'actions.import': 'Import JSON',
       'actions.wipe': 'Wipe all data',
@@ -1187,6 +1234,10 @@
       'scale.text': '文字大小',
       'scale.buttons': '按鈕大小',
       'scale.showInputSliders': '在輸入頁顯示 SP/DP/HR 滑桿',
+      'scale.idleTimerMode': '5 分鐘靜置計時器',
+      'scale.idleTimerOcean': 'Ocean Wave（影片）',
+      'scale.idleTimerMoon': 'Moon Orbit（計時器）',
+      'prep.moonHint': '一圈 = 一分鐘',
       'actions.export': '匯出 JSON',
       'actions.import': '匯入 JSON',
       'actions.wipe': '清除所有資料',
@@ -1370,6 +1421,7 @@
   const KEY_DATA_COLLAPSE = 'bp_data_collapsed';
   const KEY_UI_SCALE = 'bp_ui_scale_v1';
   const KEY_INPUT_SLIDER_VISIBLE = 'bp_input_slider_visible_v1';
+  const KEY_IDLE_TIMER_MODE = 'bp_idle_timer_mode_v1';
 
   function loadRecords(){
     try { return JSON.parse(localStorage.getItem(KEY_REC) || '[]'); }
@@ -1702,10 +1754,19 @@
   const btnTimer = $('btnTimer');
   const prepModal = $('prepModal');
   const btnPrepClose = $('btnPrepClose');
+  const prepVideoWrap = document.querySelector('#prepModal .prepVideoWrap');
+  const prepMoonWrap = $('prepMoonWrap');
+  const prepMoonCanvas = $('prepMoonCanvas');
+  const prepMoonTime = $('prepMoonTime');
+  const prepMoonBar = $('prepMoonBar');
   let pendingInputOpen = false;
   let timer = null;
   let remain = 60;
   let isTimerRunning = false;
+  let idleTimerMode = 'ocean';
+  let moonRaf = null;
+  let moonStartAt = 0;
+  const MOON_IDLE_MS = 5 * 60 * 1000;
 
   function renderTimer(){
     const mm = pad2(Math.floor(remain / 60));
@@ -1744,6 +1805,96 @@
   }
 
   btnTimer.addEventListener('click', startTimer);
+
+  function renderMoonCountdown(elapsedMs){
+    if (!prepMoonCanvas) return;
+    const total = MOON_IDLE_MS;
+    const elapsed = clamp(elapsedMs, 0, total);
+    const remaining = total - elapsed;
+    const sec = Math.ceil(remaining / 1000);
+    const mm = pad2(Math.floor(sec / 60));
+    const ss = pad2(sec % 60);
+    prepMoonTime.textContent = `${mm}:${ss}`;
+    const progress = total > 0 ? elapsed / total : 0;
+    prepMoonBar.style.width = `${(progress * 100).toFixed(3)}%`;
+
+    const rect = prepMoonCanvas.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const w = Math.max(120, rect.width || 560);
+    const h = Math.max(120, rect.height || w);
+    prepMoonCanvas.width = Math.floor(w * dpr);
+    prepMoonCanvas.height = Math.floor(h * dpr);
+    const ctx = prepMoonCanvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const orbitR = Math.min(w, h) * 0.34;
+    const earthR = Math.min(w, h) * 0.09;
+    const moonR = Math.min(w, h) * 0.045;
+    const tSec = elapsed / 1000;
+    const orbitAngle = ((tSec % 60) / 60) * Math.PI * 2 - Math.PI / 2;
+    const moonX = cx + Math.cos(orbitAngle) * orbitR;
+    const moonY = cy + Math.sin(orbitAngle) * orbitR;
+
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#e9e2d6';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = '#e9e2d6';
+    ctx.beginPath();
+    ctx.arc(cx, cy, earthR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = '#d7cfbf';
+    ctx.beginPath();
+    ctx.arc(cx - earthR * 0.2, cy - earthR * 0.1, earthR * 0.36, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#e9e2d6';
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = '#e9e2d6';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx, cy, orbitR * 1.12, -Math.PI / 2, -Math.PI / 2 + ((1 - progress) * Math.PI * 2), false);
+    ctx.stroke();
+  }
+
+  function tickMoonCountdown(now){
+    const elapsed = now - moonStartAt;
+    renderMoonCountdown(elapsed);
+    if (elapsed >= MOON_IDLE_MS){
+      moonRaf = null;
+      return;
+    }
+    moonRaf = requestAnimationFrame(tickMoonCountdown);
+  }
+
+  function stopMoonCountdown(){
+    if (moonRaf){
+      cancelAnimationFrame(moonRaf);
+      moonRaf = null;
+    }
+    renderMoonCountdown(0);
+  }
+
+  function startMoonCountdown(){
+    stopMoonCountdown();
+    moonStartAt = performance.now();
+    moonRaf = requestAnimationFrame(tickMoonCountdown);
+  }
 
   // ---------- Defaults: last 7 day avg or fallback ----------
   const defaultBadge = $('defaultBadge');
@@ -1940,10 +2091,13 @@
   function openPrepModal(){
     pendingInputOpen = true;
     prepModal.classList.remove('hidden');
+    if (idleTimerMode === 'moon') startMoonCountdown();
+    else stopMoonCountdown();
   }
 
   function closePrepModal(){
     prepModal.classList.add('hidden');
+    stopMoonCountdown();
     if (pendingInputOpen){
       showInputPanel();
       pendingInputOpen = false;
@@ -2132,6 +2286,7 @@
       records: loadRecords(),
       meds: loadMeds(),
       uiScale: uiScalePrefs,
+      idleTimerMode,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -2159,6 +2314,7 @@
         saveRecords(data.records);
         saveMeds(data.meds);
         applyUiScalePrefs(data.uiScale || loadUiScalePrefs());
+        setIdleTimerMode(data.idleTimerMode || loadIdleTimerMode());
         meds = loadMeds();
         syncMedFromStore();
         applyDefaults();
@@ -2325,6 +2481,7 @@
       records: mergedRecords,
       meds: mergedMeds,
       uiScale: localScale || remoteScale || {textLevel: 3, buttonLevel: 3},
+      idleTimerMode: remote.idleTimerMode || localPayload.idleTimerMode || 'ocean',
     };
   }
 
@@ -2337,6 +2494,7 @@
     saveRecords(records);
     saveMeds(medsMap);
     applyUiScalePrefs(payload.uiScale || loadUiScalePrefs());
+    setIdleTimerMode(payload.idleTimerMode || loadIdleTimerMode(), {persist:false});
     meds = loadMeds();
     syncMedFromStore();
     applyDefaults();
@@ -2379,6 +2537,7 @@
       records: loadRecords(),
       meds: loadMeds(),
       uiScale: uiScalePrefs,
+      idleTimerMode,
     };
   }
 
@@ -3007,6 +3166,7 @@
   const scaleTextSlider = $('scaleTextSlider');
   const scaleButtonSlider = $('scaleButtonSlider');
   const showInputSliders = $('showInputSliders');
+  const idleTimerModeSelect = $('idleTimerMode');
 
 
   function applyInputSliderVisibility(show){
@@ -3023,6 +3183,24 @@
   function setInputSliderVisibility(show){
     localStorage.setItem(KEY_INPUT_SLIDER_VISIBLE, show ? '1' : '0');
     applyInputSliderVisibility(show);
+  }
+
+  function loadIdleTimerMode(){
+    const mode = localStorage.getItem(KEY_IDLE_TIMER_MODE);
+    return mode === 'moon' ? 'moon' : 'ocean';
+  }
+
+  function setIdleTimerMode(mode, opts = {}){
+    const {persist = true} = opts;
+    idleTimerMode = mode === 'moon' ? 'moon' : 'ocean';
+    if (persist){
+      localStorage.setItem(KEY_IDLE_TIMER_MODE, idleTimerMode);
+    }
+    if (idleTimerModeSelect) idleTimerModeSelect.value = idleTimerMode;
+    if (prepVideoWrap && prepMoonWrap){
+      prepVideoWrap.classList.toggle('hidden', idleTimerMode !== 'ocean');
+      prepMoonWrap.classList.toggle('hidden', idleTimerMode !== 'moon');
+    }
   }
 
   function openScaleModal(){
@@ -3064,6 +3242,10 @@
   scaleTextSlider.addEventListener('input', handleScaleChange);
   scaleButtonSlider.addEventListener('input', handleScaleChange);
   showInputSliders.addEventListener('change', () => setInputSliderVisibility(showInputSliders.checked));
+  idleTimerModeSelect.addEventListener('change', () => {
+    setIdleTimerMode(idleTimerModeSelect.value);
+    saveToDrive({silent:true});
+  });
 
   // ---------- Init ----------
   function init(){
@@ -3085,6 +3267,7 @@
     observeScaleForNewNodes();
     initDriveAuth();
     applyInputSliderVisibility(loadInputSliderVisibility());
+    setIdleTimerMode(loadIdleTimerMode());
 
     const storedLang = localStorage.getItem('bp_lang');
     const browserLang = (navigator.language || '').toLowerCase();
