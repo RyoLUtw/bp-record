@@ -2494,7 +2494,7 @@
     saveRecords(records);
     saveMeds(medsMap);
     applyUiScalePrefs(payload.uiScale || loadUiScalePrefs());
-    setIdleTimerMode(payload.idleTimerMode || loadIdleTimerMode(), {persist:false});
+    setIdleTimerMode(payload.idleTimerMode || loadIdleTimerMode());
     meds = loadMeds();
     syncMedFromStore();
     applyDefaults();
