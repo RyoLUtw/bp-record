@@ -596,8 +596,10 @@
     }
     .prepMoonWrap:fullscreen canvas,
     .prepMoonWrap:-webkit-full-screen canvas{
-      width:min(92vw, 92vh);
-      max-width:1400px;
+      width:88vmin;
+      height:88vmin;
+      max-width:88vmin;
+      max-height:88vmin;
       margin:0 auto;
     }
 
@@ -687,8 +689,7 @@
           </div>
           <div class="prepMoonProgress"><div class="prepMoonBar" id="prepMoonBar"></div></div>
           <div class="prepMoonControls">
-            <button class="btn primary" type="button" id="prepMoonStart" data-i18n="prep.moonStart">Start</button>
-            <button class="btn secondary" type="button" id="prepMoonPause" data-i18n="prep.moonPause">Pause</button>
+            <button class="btn primary" type="button" id="prepMoonToggle" data-i18n="prep.moonStart">Start</button>
             <button class="btn secondary" type="button" id="prepMoonReset" data-i18n="prep.moonReset">Reset</button>
             <button class="btn secondary" type="button" id="prepMoonFullscreen" data-i18n="prep.moonFullscreen">Full screen</button>
           </div>
@@ -1124,7 +1125,6 @@
       'scale.idleTimerMoon': 'Moon Orbit (timer)',
       'prep.moonHint': 'One orbit = one minute',
       'prep.moonStart': 'Start',
-      'prep.moonPause': 'Pause',
       'prep.moonReset': 'Reset',
       'prep.moonFullscreen': 'Full screen',
       'actions.export': 'Export JSON',
@@ -1268,7 +1268,6 @@
       'scale.idleTimerMoon': 'Moon Orbit（計時器）',
       'prep.moonHint': '一圈 = 一分鐘',
       'prep.moonStart': '開始',
-      'prep.moonPause': '暫停',
       'prep.moonReset': '重設',
       'prep.moonFullscreen': '全螢幕',
       'actions.export': '匯出 JSON',
@@ -1398,6 +1397,7 @@
       driveStatus.textContent = t(driveStatusState.key, driveStatusState.vars);
     }
     btnTimer.textContent = isTimerRunning ? t('actions.stop') : t('actions.start');
+    updateMoonToggleButton();
     todayPill.textContent = t('today.label', {date: fmtDate(new Date())});
     if (defaultMeta && defaultBadge){
       const source = defaultMeta.kind === 'sevenDay'
@@ -1792,8 +1792,7 @@
   const prepMoonCanvas = $('prepMoonCanvas');
   const prepMoonTime = $('prepMoonTime');
   const prepMoonBar = $('prepMoonBar');
-  const prepMoonStartBtn = $('prepMoonStart');
-  const prepMoonPauseBtn = $('prepMoonPause');
+  const prepMoonToggleBtn = $('prepMoonToggle');
   const prepMoonResetBtn = $('prepMoonReset');
   const prepMoonFullscreenBtn = $('prepMoonFullscreen');
   let pendingInputOpen = false;
@@ -1806,6 +1805,12 @@
   let moonLastTick = 0;
   let moonRunning = false;
   const MOON_IDLE_MS = 5 * 60 * 1000;
+
+  function updateMoonToggleButton(){
+    if (!prepMoonToggleBtn) return;
+    const key = moonRunning ? 'actions.stop' : 'actions.start';
+    prepMoonToggleBtn.textContent = t(key);
+  }
 
   function renderTimer(){
     const mm = pad2(Math.floor(remain / 60));
@@ -1948,6 +1953,7 @@
       if (moonElapsedMs >= MOON_IDLE_MS){
         moonElapsedMs = MOON_IDLE_MS;
         moonRunning = false;
+        updateMoonToggleButton();
       }
     }
     renderMoonCountdown(moonElapsedMs);
@@ -1966,6 +1972,7 @@
 
   function stopMoonCountdown(){
     moonRunning = false;
+    updateMoonToggleButton();
     moonLastTick = 0;
     moonElapsedMs = 0;
     if (moonRaf){
@@ -1978,17 +1985,20 @@
   function startMoonCountdown(){
     moonRunning = true;
     moonLastTick = 0;
+    updateMoonToggleButton();
     ensureMoonLoop();
   }
 
   function pauseMoonCountdown(){
     moonRunning = false;
     moonLastTick = 0;
+    updateMoonToggleButton();
     ensureMoonLoop();
   }
 
   function resetMoonCountdown(){
     moonRunning = false;
+    updateMoonToggleButton();
     moonElapsedMs = 0;
     moonLastTick = 0;
     ensureMoonLoop();
@@ -2005,11 +2015,17 @@
     }
     if (prepMoonWrap.requestFullscreen) await prepMoonWrap.requestFullscreen();
     else if (prepMoonWrap.webkitRequestFullscreen) prepMoonWrap.webkitRequestFullscreen();
+    try { screen.orientation?.unlock?.(); } catch (e) {}
+    try { await screen.orientation?.lock?.('any'); } catch (e) {}
     ensureMoonLoop();
   }
 
-  prepMoonStartBtn?.addEventListener('click', startMoonCountdown);
-  prepMoonPauseBtn?.addEventListener('click', pauseMoonCountdown);
+  function toggleMoonStartPause(){
+    if (moonRunning) pauseMoonCountdown();
+    else startMoonCountdown();
+  }
+
+  prepMoonToggleBtn?.addEventListener('click', toggleMoonStartPause);
   prepMoonResetBtn?.addEventListener('click', resetMoonCountdown);
   prepMoonFullscreenBtn?.addEventListener('click', () => { toggleMoonFullscreen(); });
 
@@ -3391,6 +3407,7 @@
     initDriveAuth();
     applyInputSliderVisibility(loadInputSliderVisibility());
     setIdleTimerMode(loadIdleTimerMode());
+    updateMoonToggleButton();
 
     const storedLang = localStorage.getItem('bp_lang');
     const browserLang = (navigator.language || '').toLowerCase();
