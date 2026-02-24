@@ -594,6 +594,29 @@
       display:flex;
       justify-content:center;
     }
+
+
+    .consumablesFabWrap{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:30;
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+    }
+
+    .consumablesFab{
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:12px;
+      text-decoration:none;
+      box-shadow: var(--shadow);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
     .prepMoonWrap:fullscreen canvas,
     .prepMoonWrap:-webkit-full-screen canvas{
       width:88vmin;
@@ -1056,6 +1079,12 @@
       </div>
     </section>
 
+  </div>
+
+
+
+  <div class="consumablesFabWrap">
+    <a class="btn consumablesFab" href="./consumables-editor.html" aria-label="Open consumables editor">🍽️ Consumables</a>
   </div>
 
 <script>

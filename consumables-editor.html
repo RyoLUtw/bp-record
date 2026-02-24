@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consumables Editor</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#111824;--text:#e9eef6;--muted:#a8b3c7;--line:rgba(255,255,255,.12);--accent:#8ab4ff;--danger:#ff5b5b}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 36px}
+    .head{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;padding:8px 0 14px;background:linear-gradient(to bottom, rgba(11,15,20,.96), rgba(11,15,20,.7));backdrop-filter:blur(8px)}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 10px;font:inherit}
+    textarea{min-height:140px;resize:vertical}
+    .btn{border:1px solid var(--line);background:rgba(138,180,255,.2);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.secondary{background:rgba(255,255,255,.08)}
+    .btn.danger{background:rgba(255,91,91,.18)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+    .item{display:flex;justify-content:space-between;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.18)}
+    .meta{font-size:12px;color:var(--muted)}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:12px}
+    .modal.show{display:flex}
+    .dialog{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;max-width:380px;width:100%}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <h1 style="margin:0;font-size:20px">Consumables JSON Editor</h1>
+        <div class="meta">Loads <code>./consumables.json</code> from repository root.</div>
+      </div>
+      <div class="row">
+        <a class="btn secondary" href="./index.html">Back</a>
+        <button class="btn" id="downloadBtn">Download JSON</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2 style="margin-top:0">Add new consumable</h2>
+        <h3>1) Manual input</h3>
+        <div class="row" id="manualFields"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="addManualBtn">Add consumable</button>
+        </div>
+        <hr style="border-color:var(--line);margin:16px 0">
+        <h3>2) Paste JSON and import</h3>
+        <textarea id="jsonPaste" placeholder='{"全穀雜糧類":[{"name":"糙米飯","saturatedFat":0.1,...}]}'></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="importJsonBtn">Parse and import</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0">Edit existing consumables</h2>
+        <div class="row">
+          <div class="field"><label>Category</label><select id="editCategory"></select></div>
+          <div class="field"><label>Consumable</label><select id="editName"></select></div>
+        </div>
+        <div class="row" id="editFields" style="margin-top:10px"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="saveEditBtn">Save changes</button>
+          <button class="btn danger" id="deleteBtn">Delete consumable</button>
+        </div>
+        <div style="margin-top:14px">
+          <div class="meta">Current list</div>
+          <div class="list" id="listView"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="confirmModal" aria-modal="true" role="dialog">
+    <div class="dialog">
+      <h3 style="margin-top:0">Confirm delete</h3>
+      <p class="meta" id="confirmText"></p>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn secondary" id="cancelDeleteBtn">Cancel</button>
+        <button class="btn danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const schema = ['name','saturatedFat','addedSugar','sodium','protein','solubleFiber','insolubleFiber','potassium','magnesium'];
+  let data = {};
+  let pendingDelete = null;
+
+  const $ = (id) => document.getElementById(id);
+  const manualFields = $('manualFields');
+  const editFields = $('editFields');
+
+  function makeField(prefix, key, type='number') {
+    const wrap = document.createElement('div');
+    wrap.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = key;
+    const input = document.createElement('input');
+    input.type = type;
+    input.step = 'any';
+    input.id = `${prefix}_${key}`;
+    wrap.append(label, input);
+    return wrap;
+  }
+
+  function buildForms() {
+    manualFields.innerHTML = '';
+    editFields.innerHTML = '';
+    schema.forEach((key) => {
+      const type = key === 'name' ? 'text' : 'number';
+      manualFields.append(makeField('add', key, type));
+      editFields.append(makeField('edit', key, type));
+    });
+  }
+
+  function getItemFrom(prefix) {
+    const item = {};
+    for (const key of schema) {
+      const raw = $(`${prefix}_${key}`).value.trim();
+      if (key === 'name') {
+        if (!raw) throw new Error('Name is required');
+        item[key] = raw;
+      } else {
+        item[key] = raw === '' ? 0 : Number(raw);
+        if (!Number.isFinite(item[key])) throw new Error(`${key} must be a number`);
+      }
+    }
+    return item;
+  }
+
+  async function loadData() {
+    const res = await fetch('./consumables.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Unable to load consumables.json');
+    data = await res.json();
+    renderAll();
+  }
+
+  function renderAll() {
+    const categories = Object.keys(data);
+    const catSel = $('editCategory');
+    catSel.innerHTML = categories.map((c) => `<option>${c}</option>`).join('');
+    if (!categories.length) {
+      catSel.innerHTML = '<option>(none)</option>';
+      $('editName').innerHTML = '';
+      $('listView').innerHTML = '<div class="meta">No data</div>';
+      return;
+    }
+    if (!categories.includes(catSel.value)) catSel.value = categories[0];
+    renderNames();
+    renderList();
+  }
+
+  function renderNames() {
+    const cat = $('editCategory').value;
+    const names = (data[cat] || []).map((x) => x.name);
+    const nameSel = $('editName');
+    nameSel.innerHTML = names.map((n) => `<option>${n}</option>`).join('');
+    if (names.length) {
+      if (!names.includes(nameSel.value)) nameSel.value = names[0];
+      fillEditForm();
+    } else {
+      schema.forEach((k) => $(`edit_${k}`).value = '');
+    }
+  }
+
+  function fillEditForm() {
+    const cat = $('editCategory').value;
+    const name = $('editName').value;
+    const item = (data[cat] || []).find((x) => x.name === name);
+    if (!item) return;
+    schema.forEach((k) => $(`edit_${k}`).value = item[k] ?? '');
+  }
+
+  function renderList() {
+    const rows = [];
+    for (const [cat, items] of Object.entries(data)) {
+      for (const item of items) {
+        rows.push(`<div class="item"><div><strong>${item.name}</strong><div class="meta">${cat}</div></div><div class="meta">protein ${item.protein}, sodium ${item.sodium}</div></div>`);
+      }
+    }
+    $('listView').innerHTML = rows.join('') || '<div class="meta">No data</div>';
+  }
+
+  $('addManualBtn').addEventListener('click', () => {
+    try {
+      const item = getItemFrom('add');
+      const category = prompt('Category for this consumable?');
+      if (!category) return;
+      if (!data[category]) data[category] = [];
+      data[category].push(item);
+      schema.forEach((k) => $(`add_${k}`).value = '');
+      renderAll();
+    } catch (err) { alert(err.message); }
+  });
+
+  $('importJsonBtn').addEventListener('click', () => {
+    try {
+      const parsed = JSON.parse($('jsonPaste').value);
+      for (const [cat, items] of Object.entries(parsed)) {
+        if (!Array.isArray(items)) continue;
+        if (!data[cat]) data[cat] = [];
+        items.forEach((item) => {
+          if (item && item.name) data[cat].push(item);
+        });
+      }
+      $('jsonPaste').value = '';
+      renderAll();
+    } catch {
+      alert('Invalid JSON format');
+    }
+  });
+
+  $('editCategory').addEventListener('change', renderNames);
+  $('editName').addEventListener('change', fillEditForm);
+
+  $('saveEditBtn').addEventListener('click', () => {
+    try {
+      const cat = $('editCategory').value;
+      const name = $('editName').value;
+      const idx = (data[cat] || []).findIndex((x) => x.name === name);
+      if (idx < 0) return;
+      data[cat][idx] = getItemFrom('edit');
+      renderAll();
+    } catch (err) { alert(err.message); }
+  });
+
+  $('deleteBtn').addEventListener('click', () => {
+    const cat = $('editCategory').value;
+    const name = $('editName').value;
+    if (!cat || !name) return;
+    pendingDelete = { cat, name };
+    $('confirmText').textContent = `Delete "${name}" from "${cat}"?`;
+    $('confirmModal').classList.add('show');
+  });
+
+  $('cancelDeleteBtn').addEventListener('click', () => {
+    pendingDelete = null;
+    $('confirmModal').classList.remove('show');
+  });
+
+  $('confirmDeleteBtn').addEventListener('click', () => {
+    if (!pendingDelete) return;
+    const { cat, name } = pendingDelete;
+    data[cat] = (data[cat] || []).filter((x) => x.name !== name);
+    if (!data[cat].length) delete data[cat];
+    pendingDelete = null;
+    $('confirmModal').classList.remove('show');
+    renderAll();
+  });
+
+  $('downloadBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'consumables.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  buildForms();
+  loadData().catch((err) => {
+    alert(err.message);
+    data = {};
+    renderAll();
+  });
+})();
+</script>
+</body>
+</html>
