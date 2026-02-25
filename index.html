@@ -678,9 +678,7 @@
           <li data-i18n="prep.step4">Relax your shoulders, jaw, and hands (don’t clench a fist).</li>
           <li data-i18n="prep.step5">Stay still and quiet—no talking, no phone scrolling, no reading something stressful, no walking around.</li>
         </ol>
-        <div class="prepVideoWrap">
-          <iframe width="560" height="315" src="https://www.youtube.com/embed/n5mkXSARqX0?si=hI42wg4Ts323fRu9" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        </div>
+        <div class="prepVideoWrap" id="prepVideoWrap" data-video-src="https://www.youtube.com/embed/n5mkXSARqX0?si=hI42wg4Ts323fRu9"></div>
         <div class="prepMoonWrap hidden" id="prepMoonWrap">
           <canvas id="prepMoonCanvas"></canvas>
           <div class="prepMoonMeta">
@@ -795,6 +793,8 @@
                   <option value="other" data-i18n="time.other">Other</option>
                 </select>
               </div>
+
+              <button class="btn secondary" type="button" id="btnGetReady" data-i18n="actions.getReady">Get Ready (準備測量)</button>
 
               <div class="toggle" title="This is stored per day" data-i18n-title="medication.titleHint">
                 <div class="switch" id="medSwitch" role="switch" aria-checked="false" tabindex="0"></div>
@@ -1116,6 +1116,7 @@
       'actions.saveAveraged': 'Save averaged record',
       'actions.scale': 'UI setting',
       'actions.close': 'Close',
+      'actions.getReady': 'Get Ready (準備測量)',
       'scale.title': 'UI setting',
       'scale.text': 'Text size',
       'scale.buttons': 'Button size',
@@ -1259,6 +1260,7 @@
       'actions.saveAveraged': '儲存平均紀錄',
       'actions.scale': '介面設定',
       'actions.close': '關閉',
+      'actions.getReady': '準備測量',
       'scale.title': '介面設定',
       'scale.text': '文字大小',
       'scale.buttons': '按鈕大小',
@@ -1787,7 +1789,7 @@
   const btnTimer = $('btnTimer');
   const prepModal = $('prepModal');
   const btnPrepClose = $('btnPrepClose');
-  const prepVideoWrap = document.querySelector('#prepModal .prepVideoWrap');
+  const prepVideoWrap = $('prepVideoWrap');
   const prepMoonWrap = $('prepMoonWrap');
   const prepMoonCanvas = $('prepMoonCanvas');
   const prepMoonTime = $('prepMoonTime');
@@ -2034,6 +2036,7 @@
   const todayPill = $('todayPill');
   const inputPanel = $('inputPanel');
   const btnAddMeasurement = $('btnAddMeasurement');
+  const btnGetReady = $('btnGetReady');
   const dataBody = $('dataBody');
   const btnDataToggle = $('btnDataToggle');
   let defaultMeta = {kind: 'fallback', count: 0};
@@ -2221,9 +2224,35 @@
   }
 
   btnSave.addEventListener('click', saveAveraged);
-  function openPrepModal(){
-    pendingInputOpen = true;
+  function syncInputDateToToday(){
+    const today = fmtDate(new Date());
+    inputDate.value = today;
+    todayPill.textContent = t('today.label', {date: today});
+    syncMedFromStore();
+  }
+
+  function ensurePrepVideoLoaded(){
+    if (!prepVideoWrap) return;
+    if (prepVideoWrap.querySelector('iframe')) return;
+    const src = prepVideoWrap.dataset.videoSrc;
+    if (!src) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.width = '560';
+    iframe.height = '315';
+    iframe.src = src;
+    iframe.title = 'YouTube video player';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.allowFullscreen = true;
+
+    prepVideoWrap.appendChild(iframe);
+  }
+
+  function openPrepModal(shouldOpenInput = true){
+    pendingInputOpen = shouldOpenInput;
     prepModal.classList.remove('hidden');
+    ensurePrepVideoLoaded();
     if (idleTimerMode === 'moon'){
       resetMoonCountdown();
       startMoonCountdown();
@@ -2243,7 +2272,11 @@
     }
   }
 
-  btnAddMeasurement.addEventListener('click', openPrepModal);
+  btnAddMeasurement.addEventListener('click', () => {
+    syncInputDateToToday();
+    openPrepModal(true);
+  });
+  btnGetReady?.addEventListener('click', () => openPrepModal(false));
   btnPrepClose.addEventListener('click', closePrepModal);
   prepModal.addEventListener('click', (e) => {
     if (e.target === prepModal){
